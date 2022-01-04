@@ -1,0 +1,6 @@
+.cache/
+.ccls*
+.clangd
+*.json
+objs/
+ft_nmap
