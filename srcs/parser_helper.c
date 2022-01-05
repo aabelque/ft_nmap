@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 13:21:42 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/05 17:41:04 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,4 +123,13 @@ int get_number(char **argv, int idx, int dash)
                         return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
+}
+
+void check_options(void)
+{
+        if (!e.ports[0])
+                for (int i = 0, port = 1; port < 1025; i++, port++)
+                        e.ports[i] = port;
+        if (!e.scan)
+                e.scan |= ALL;
 }

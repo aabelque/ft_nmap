@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 18:15:42 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/05 16:39:12 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,29 +14,33 @@
 
 extern t_env e;
 
-void *nmap_scan(void *arg)
+void *nmap_scan(void *target)
 {
         int i = -1;
+        t_target *tgt = (t_target *)target;
 
         if (e.dim) {
                 while (++i < e.dim) {
-                        print_header(e.target[i].hname, e.target[i].ip, e.target[i].rdns);
-                        /* run_scan(); */
+                        print_header(tgt[i].hname, tgt[i].ip, tgt[i].rdns);
+                        if (run_scan(tgt))
+                                return NULL;
                         write(1, "\n", 1);
                 }
         } else {
-                print_header(e.target->hname, e.target->ip, e.target->rdns);
-                /* run_scan(); */
+                print_header(tgt->hname, tgt->ip, tgt->rdns);
+                if (run_scan(tgt))
+                        return NULL;
         }
         return NULL;
 }
 
 void ft_nmap(void)
 {
-        void *arg;
+        void *target;
 
-        if (!e.nb_thread)
-                nmap_scan(arg);
+        target = e.target;
+        /* if (!e.nb_thread) */
+        nmap_scan(target);
         /* else */
         /*         create_thread(); */
 }

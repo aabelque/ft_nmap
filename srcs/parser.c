@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 17:52:04 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/05 17:41:51 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,8 +122,6 @@ int parse_arg(int argc, char **argv)
                         help_menu(EXIT_FAILURE);
                 }
         }
-        if (!e.ports[0])
-                for (int i = 0, port = 1; port < 1025; i++, port++)
-                        e.ports[i] = port;
+        check_options();
         return EXIT_SUCCESS;
 }

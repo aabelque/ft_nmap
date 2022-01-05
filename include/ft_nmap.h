@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 18:03:17 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/05 23:28:12 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,8 @@
 /* Utils define */
 #define GIT "https://github.com/aabelque/ft_nmap.git"
 #define MAXHOST 1025
+#define ERRBUF PCAP_ERRBUF_SIZE
+#define FILTER ""
 
 /* Define error type */
 #define ERR_HOSTNAME 1
@@ -46,6 +48,7 @@
 #define FIN 0x8         /* 0000 1000 */
 #define XMAS 0x10       /* 0001 0000 */
 #define UDP 0x20        /* 0010 0000 */
+#define ALL 0x3f        /* 0011 1111 */
 
 /* Target host structure */
 typedef struct  s_target {
@@ -68,6 +71,8 @@ typedef struct  s_env {
         char                    *hostname;
         char                    dns[MAXHOST];
         char                    ip[INET_ADDRSTRLEN];
+        char                    my_ip[INET_ADDRSTRLEN];
+        char                    my_mask[INET_ADDRSTRLEN];
         char                    **multiple_ip;
         struct timeval          tv;
         struct sockaddr_in      *to;
@@ -85,16 +90,19 @@ void resolve_dns(struct sockaddr *addr, t_target *target, bool many);
 int parse_arg(int argc, char **argv);
 int resolve_host(t_target *target, bool many);
 int set_and_resolve_hosts(void);
+int run_scan(t_target *target);
 void *nmap_scan(void *arg);
 
 /* utils functions */
 void help_menu(int status);
+void check_options(void);
 int get_nb_of_comma(char *s);
 int ip_dot(char *ip);
 int isdash(char *s);
 int get_number(char **argv, int idx, int dash);
 int get_nbip_and_alloc(char *ip);
 int copy_ips(char *ip);
+int get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask);
 double gettimeval(struct timeval before, struct timeval after);
 char *get_ip_from_file(char *file);
 

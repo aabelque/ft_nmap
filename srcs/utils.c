@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 17:59:03 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/05 22:43:07 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,4 +104,19 @@ void print_header(char *hname, char *ip, char *rdns)
                         printf("UDP ");
         }
         printf("\n");
+}
+
+int get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask)
+{
+        struct in_addr addr;
+
+        addr.s_addr = ip;
+        ft_strcpy(e.my_ip, inet_ntoa(addr));
+        if (*e.my_ip == '\0')
+                return EXIT_FAILURE;
+        addr.s_addr = mask;
+        ft_strcpy(e.my_mask, inet_ntoa(addr));
+        if (*e.my_mask == '\0')
+                return EXIT_FAILURE;
+        return EXIT_SUCCESS;
 }

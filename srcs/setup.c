@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 18:10:13 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/05 22:34:54 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@ void environment_setup(void)
         e.to = NULL;
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
+        ft_memset(e.my_ip, 0, ft_strlen(e.my_ip));
+        ft_memset(e.my_mask, 0, ft_strlen(e.my_mask));
         ft_memset(e.ports, 0, sizeof(e.ports));
 }
 
@@ -43,6 +45,8 @@ void environment_cleanup(void)
         e.to = NULL;
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
+        ft_memset(e.my_ip, 0, ft_strlen(e.my_ip));
+        ft_memset(e.my_mask, 0, ft_strlen(e.my_mask));
         ft_memset(e.ports, 0, sizeof(e.ports));
         if (e.target) {
                 if (e.dim) {
