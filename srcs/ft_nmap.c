@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/05 16:39:12 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/09 22:36:49 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,13 +22,13 @@ void *nmap_scan(void *target)
         if (e.dim) {
                 while (++i < e.dim) {
                         print_header(tgt[i].hname, tgt[i].ip, tgt[i].rdns);
-                        if (run_scan(tgt))
+                        if (process_scan(tgt[i]))
                                 return NULL;
                         write(1, "\n", 1);
                 }
         } else {
                 print_header(tgt->hname, tgt->ip, tgt->rdns);
-                if (run_scan(tgt))
+                if (process_scan(*tgt))
                         return NULL;
         }
         return NULL;

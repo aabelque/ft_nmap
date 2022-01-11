@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/29 23:08:06 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 18:04:46 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/12 00:18:39 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,5 +70,24 @@ int resolve_host(t_target *target, bool many)
         resolve_dns((struct sockaddr *)addr, target, many);
         inet_ntop(AF_INET, &addr->sin_addr, target->ip, INET_ADDRSTRLEN);
         freeaddrinfo(result);
+        return EXIT_SUCCESS;
+}
+
+int set_and_resolve_hosts(void)
+{
+        if (e.many_target) {
+                e.target = ft_memalloc(sizeof(*e.target) * e.dim);
+                for (int i = 0; i < e.dim; i++) {
+                        ft_strcpy(e.target[i].ip, e.multiple_ip[i]);
+                        if (resolve_host(&e.target[i], e.many_target))
+                                return EXIT_FAILURE;
+                        //TODO get interface addr (getifaddrs)-> target.src
+                }
+        } else {
+                e.target = ft_memalloc(sizeof(*e.target));
+                if (resolve_host(e.target, e.many_target))
+                        return EXIT_FAILURE;
+                //TODO get interface addr (getifaddrs)-> target.src
+        }
         return EXIT_SUCCESS;
 }

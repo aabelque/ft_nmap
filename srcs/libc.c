@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:57:59 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/04 13:40:06 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/07 17:13:12 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,4 +190,46 @@ char **ft_strsplit(char const *s, char c)
         }
         tab[i] = NULL;
         return tab;
+}
+
+static int ft_size_number(int n)
+{
+        int count = 0;
+
+        if (n < 0)
+                count++;
+        if (!n)
+                return 1;
+        while (n) {
+                n /= 10;
+                count++;
+        }
+        return count;
+}
+
+inline static int ft_abs(int val)
+{
+        return val < 0 ? -val : val;
+}
+
+char *ft_itoa(int n)
+{
+        char *str;
+        size_t len;
+
+        len = ft_size_number(n);
+        str = malloc(sizeof(*str) * len + 1);
+        if (!str)
+                return NULL;
+        if (n < 0)
+                str[0] = '-';
+        str[len] = '\0';
+        while (1) {
+                str[len - 1] = ft_abs(n % 10) + '0';
+                n /= 10;
+                if (!n)
+                        break;
+                len--;
+        }
+        return str;
 }

@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/05 22:43:07 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/11 23:38:05 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,5 +118,83 @@ int get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask)
         ft_strcpy(e.my_mask, inet_ntoa(addr));
         if (*e.my_mask == '\0')
                 return EXIT_FAILURE;
+        return EXIT_SUCCESS;
+}
+
+int get_device_ip_and_mask(char *host, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask)
+{
+        int cc = 0;
+        char dev[3];
+        char error[ERRBUF], s[ERRBUF];
+
+        ft_memset(dev, 0, 3);
+        if (!ft_strcmp(host, "127.0.0.1")) {
+                ft_strcpy(dev, "lo");
+                *device = dev;
+                ft_strcpy(e.my_ip, "127.0.0.1");
+                return EXIT_SUCCESS;
+        }
+        *device = pcap_lookupdev(error);
+        if (!*device) {
+                fprintf(stderr, "%s", error);
+                return EXIT_FAILURE;
+        }
+
+        cc = pcap_lookupnet(*device, ip, mask, error);
+        if (cc == -1) {
+                sprintf(s, "Could not get information for device: %s - %s\n", \
+                                *device, error);
+                fprintf(stderr, "%s", s);
+                return EXIT_FAILURE;
+        }
+
+        if (get_my_ip_and_mask(*ip, *mask)) {
+                fprintf(stderr, "Error in get_my_ip_and_mask() function");
+                return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+}
+
+static char *set_filter(char *host, int port, int type)
+{
+        char *filter, *p;
+
+        filter = malloc(sizeof(*filter) * 256);
+        if (!filter)
+                return NULL;
+        sprintf(filter, "src host %s and src port %d and dst host %s", e.my_ip, port, host);
+        /* if (type == UDP) */
+        /*         sprintf(filter, "(udp and src host %s and src port %d and dst host %s) || (icmp and src host %s and dst host %s)", e.my_ip, port, host, e.my_ip, host); */
+        /*         sprintf(filter, "udp port %d and host %s", port, host); */
+        /* else */
+                /* sprintf(filter, "(tcp and src host %s and src port %d and dst host %s) || (icmp and src host %s and dst host %s)", e.my_ip, port, host, e.my_ip, host); */
+        /*         sprintf(filter, "tcp port %d and host %s", port, host); */
+        printf("filter = %s\n", filter);
+        return filter;
+}
+
+int compile_and_set_filter(t_target tgt, pcap_t **handle, bpf_u_int32 mask, \
+                int port, int type)
+{
+        int cc = 0;
+        char s[ERRBUF];
+        char *filter;
+        struct bpf_program fp;
+
+        filter = set_filter(tgt.ip, port, type);
+        cc = pcap_compile(*handle, &fp, filter, 0, mask);
+        if (cc == -1) {
+                sprintf(s, "Bad filter - %s\n", pcap_geterr(*handle));
+                fprintf(stderr, "%s", s);
+                return EXIT_FAILURE;
+        }
+
+        cc = pcap_setfilter(*handle, &fp);
+        if (cc) {
+                sprintf(s, "Set filter error - %s\n", pcap_geterr(*handle));
+                fprintf(stderr, "%s", s);
+                return EXIT_FAILURE;
+        }
+        free(filter);
         return EXIT_SUCCESS;
 }
