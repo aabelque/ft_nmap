@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:15:42 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 18:49:50 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,10 @@ typedef struct  s_env {
         char                    my_mask[INET_ADDRSTRLEN];
         char                    **multiple_ip;
         struct timeval          tv;
-        struct sockaddr_in      *to;
+        struct sigaction        sigalrm;
+        struct sigaction        sigint;
+        pcap_t                  *handle;
+        /* struct sockaddr_in      *to; */
         t_target                *target;
 }               t_env;
 
@@ -159,13 +162,15 @@ void help_menu(int8_t status);
 void check_options(void);
 /* int get_nb_of_comma(char *s); */
 void ip_dot(char *ip);
+void break_signal(int sig);
+void interrupt_signal(int sig);
 int8_t isdash(char *s);
 int8_t get_number(char **argv, int8_t idx, int8_t dash);
 int8_t get_nbip_and_alloc(char *ip);
 int8_t copy_ips(char *ip);
 int8_t get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask);
 int8_t get_device_ip_and_mask(char *host, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask);
-int8_t compile_and_set_filter(t_target *tgt, pcap_t **handle, bpf_u_int32 mask, \
+int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
                 uint16_t port, int8_t type);
 int64_t gettimeval(struct timeval before, struct timeval after);
 char *get_ip_from_file(char *file);
@@ -173,11 +178,12 @@ char *get_ip_from_file(char *file);
 /* setup functions */
 void environment_setup(void);
 void environment_cleanup(void);
+void signal_setup(void);
 void udp_packet_setup(struct udp_packet *pkt, struct in_addr addr, \
                 struct in_addr src, uint16_t port, int8_t hlen);
 void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr addr, \
                 uint16_t port, int8_t hlen, int8_t type);
-int8_t capture_setup(t_target *tgt, pcap_t **handle, uint16_t port, int8_t type);
+int8_t capture_setup(t_target *tgt, uint16_t port, int8_t type);
 /* int socket_setup(void); */
 
 /* libc functions */

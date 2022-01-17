@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:35:13 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 18:33:08 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,18 +87,17 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
         int64_t time = 0.0;
         struct timeval t1, t2;
         t_pkt_data data;
-        pcap_t *handle;
         
         data = (t_pkt_data){type, port, tgt};
-        if (capture_setup(tgt, &handle, port, type))
+        if (capture_setup(tgt, port, type))
                 goto return_failure;
         if (send_packet(tgt, port, type))
                 goto return_failure;
-        gettimeofday(&t1, NULL);
-        sleep(1);
 
+        /* sleep(1); */
+        gettimeofday(&t1, NULL);
         do {
-                cc = pcap_dispatch(handle, 1, callback, (unsigned char *)&data);
+                cc = pcap_dispatch(e.handle, 1, callback, (unsigned char *)&data);
                 gettimeofday(&t2, NULL);
                 time += gettimeval(t1, t2);
         } while (time < wait && cc == 0);
@@ -107,7 +106,7 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
                 if (no_packet(&data))
                         goto return_failure;
         /* goto return_success; */
-        pcap_close(handle);
+        pcap_close(e.handle);
         return EXIT_FAILURE;
 
 /* return_success: */

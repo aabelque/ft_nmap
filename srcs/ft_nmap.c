@@ -6,15 +6,15 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:50:05 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 18:20:31 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
+/*! TODO: handle signal with sigaction() and sigemptyset() */
 /*! TODO: handle tcp scan */
 /*! TODO: description function parser_helper.c and error.c */
-/*! TODO: handle signal with sigaction() and sigemptyset() */
 /*! TODO: handle speedup opt with pthread */
 
 extern t_env e;
@@ -80,6 +80,7 @@ int main(int argc, char **argv)
         if (getuid() != 0)
                 perror_and_exit("Ft_nmap requires root privileges.\nQUITTING!");
         environment_setup();
+        signal_setup();
         if (parse_arg(argc, argv))
                 help_menu(EXIT_FAILURE);
         gettimeofday(&e.tv, NULL);

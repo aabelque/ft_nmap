@@ -6,12 +6,13 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:44:56 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 18:50:40 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 #include <stdio.h>
+#include <sys/cdefs.h>
 
 extern t_env e;
 
@@ -231,4 +232,14 @@ return_success:
         pcap_freecode(&fp);
         free(filter);
         return EXIT_SUCCESS;
+}
+
+inline void break_signal(__attribute__((unused))int sig)
+{
+        pcap_breakloop(e.handle);
+}
+
+inline void interrupt_signal(__attribute__((unused))int sig)
+{
+        /*! TODO: cleanup env to exit properly */
 }

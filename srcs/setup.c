@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:39:44 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 18:48:53 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ void environment_setup(void)
         e.udp_socket = 0;
         e.hostname = NULL;
         e.multiple_ip = NULL;
-        e.to = NULL;
+        /* e.to = NULL; */
+        ft_memset(&e.sigalrm, 0, sizeof(e.sigalrm));
+        ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
         ft_memset(e.my_ip, 0, ft_strlen(e.my_ip));
@@ -94,7 +96,9 @@ void environment_cleanup(void)
         e.nb_thread = 0;
         e.udp_socket = 0;
         e.hostname = NULL;
-        e.to = NULL;
+        /* e.to = NULL; */
+        ft_memset(&e.sigalrm, 0, sizeof(e.sigalrm));
+        ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, '\0', ft_strlen(e.ip));
         ft_memset(e.my_ip, '\0', ft_strlen(e.my_ip));
@@ -133,9 +137,8 @@ static int8_t check_loopback(t_target *tgt, char **device)
  * @type: type of scan
  * @return 0 on success or 1 on failure
  */
-int8_t capture_setup(t_target *tgt, pcap_t **handle, uint16_t port, int8_t type)
+int8_t capture_setup(t_target *tgt, uint16_t port, int8_t type)
 {
-        int8_t cc = 0;
         int8_t to_ms = 25;
         char *device = NULL;
         char error[ERRBUF], s[ERRBUF];
@@ -144,28 +147,26 @@ int8_t capture_setup(t_target *tgt, pcap_t **handle, uint16_t port, int8_t type)
         ft_memset(error, '\0', sizeof(error));
         ft_memset(s, '\0', sizeof(s));
 
-        cc = get_device_ip_and_mask(tgt->ip, &device, &ip, &mask);
-        if (cc)
+        if (get_device_ip_and_mask(tgt->ip, &device, &ip, &mask))
                 return EXIT_FAILURE;
 
-        cc = check_loopback(tgt, &device);
-        if (cc)
+        if (check_loopback(tgt, &device))
                 return EXIT_FAILURE;
 
-        *handle = pcap_open_live(device, BUFSIZ, 0, to_ms, error);
-        if (*handle == NULL) {
-                sprintf(s, "Could not open %s - %s\n", device, error);
-                fprintf(stderr, "%s", s);
-                return EXIT_FAILURE;
-        }
+        if ((e.handle = pcap_open_live(device, BUFSIZ, 0, to_ms, error)) == NULL)
+                goto pcap_open_failure;
 
-        cc = compile_and_set_filter(tgt, handle, ip, port, type);
-        if (cc)
+        if (compile_and_set_filter(tgt, e.handle, ip, port, type))
                 return EXIT_FAILURE;
-        cc = pcap_setnonblock(*handle, 1, error);
-        if (cc)
-                return EXIT_FAILURE;
+        /* cc = pcap_setnonblock(*handle, 1, error); */
+        /* if (cc) */
+        /*         return EXIT_FAILURE; */
         return EXIT_SUCCESS;
+
+pcap_open_failure:
+        sprintf(s, "Could not open %s - %s\n", device, error);
+        fprintf(stderr, "%s", s);
+        return EXIT_FAILURE;
 }
 
 /**
@@ -223,8 +224,11 @@ void udp_packet_setup(struct udp_packet *pkt, struct in_addr dst, \
         (pkt->udp).uh_sum = 0;
 }
 
-/* int socket_setup(void) */
-/* { */
-/*         e.udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW); */
-/*         return EXIT_SUCCESS; */
-/* } */
+void signal_setup(void)
+{
+        e.sigalrm.sa_handler = &break_signal;
+        e.sigalrm.sa_flags = 0;
+
+        e.sigint.sa_handler = &interrupt_signal;
+        e.sigint.sa_flags = 0;
+}
