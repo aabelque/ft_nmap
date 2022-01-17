@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/13 14:25:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:23:55 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 23:06:04 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,6 @@ void udp_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
         int8_t state = 0;
         uint16_t port = data->port;
 
-        printf("code %d\n", code);
         switch (code) {
         case 255:
                 state |= S_OF;
