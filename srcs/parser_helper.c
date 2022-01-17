@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/05 17:41:04 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 02:31:58 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@ char *get_ip_from_file(char *file)
         return ft_strdup(buff);
 }
 
-int get_nbip_and_alloc(char *ip)
+int8_t get_nbip_and_alloc(char *ip)
 {
-        int i = 0;
+        uint16_t i = 0;
 
         while (ip[i]) {
                 if (ip[i] == '\n')
@@ -38,7 +38,7 @@ int get_nbip_and_alloc(char *ip)
         e.multiple_ip = ft_memalloc(sizeof(char *) * e.dim);
         if (!e.multiple_ip)
                 return EXIT_FAILURE;
-        for (int i = 0; i < e.dim; i++) {
+        for (uint16_t i = 0; i < e.dim; i++) {
                 e.multiple_ip[i] = ft_memalloc(sizeof(char) * INET_ADDRSTRLEN);
                 if (!e.multiple_ip[i])
                         return EXIT_FAILURE;
@@ -46,9 +46,9 @@ int get_nbip_and_alloc(char *ip)
         return EXIT_SUCCESS;
 }
 
-int copy_ips(char *ip)
+int8_t copy_ips(char *ip)
 {
-        for (int i = 0, j = 0, k = 0; ip[i] != '\0'; i++, k++) {
+        for (uint16_t i = 0, j = 0, k = 0; ip[i] != '\0'; i++, k++) {
                 if (ip[i] == '\n') {
                         j++;
                         k = -1;
@@ -61,9 +61,14 @@ int copy_ips(char *ip)
         return EXIT_SUCCESS;
 }
 
-int isdash(char *s)
+/**
+ * isdash - checks if there is a dash in string s
+ * @s: string s
+ * @return number of dash
+ */
+int8_t isdash(char *s)
 {
-        int dash = 0;
+        int8_t dash = 0;
 
         while (*s++)
                 if (*s == '-')
@@ -73,10 +78,17 @@ int isdash(char *s)
         return dash;
 }
 
-static int get_range(char *numbers)
+/**
+ * get_range - get ports range to scan
+ * @numbers: string that contains port range
+ * @return 0 on success or 1 on failure
+ *      (if more than 1024 ports, or port number < 0
+ *      or port number > uint16_t max value (65535))
+ */
+static int8_t get_range(char *numbers)
 {
         char **tmp = NULL;
-        int first = 0, last = 0;
+        uint16_t first = 0, last = 0;
         
         tmp = ft_strsplit(numbers, '-');
         first = ft_atoi(tmp[0]);
@@ -86,17 +98,25 @@ static int get_range(char *numbers)
         free(tmp);
         if (first > last || last + first > 1024 \
                         || last < 0 || first < 0 \
-                        || last > 65535 || first > 65535)
+                        || last > UINT16_MAX || first > UINT16_MAX)
                 return EXIT_FAILURE;
-        for (int i = 0; first <= last; i++, first++) {
+        for (uint16_t i = 0; first <= last && i < 1024; i++, first++) {
                 e.ports[i] = first;
         }
         return EXIT_SUCCESS;
 }
 
-static int get_all_ports(char **argv, int idx)
+/**
+ * get_all_ports - get all ports if it's not ports range
+ * @argv: string array that contains aruments
+ * @idx: position of the argument
+ * @return 0 on success or 1 on failure
+ *      (if more than 1024 ports, or port number < 0
+ *      or port number > uint16_t max value (65535))
+ */
+static int8_t get_all_ports(char **argv, int8_t idx)
 {
-        int i = 0;
+        int16_t i = 0;
         while (strisdigit(argv[idx])) {
                 if (i > 1023)
                         return EXIT_FAILURE;
@@ -105,13 +125,20 @@ static int get_all_ports(char **argv, int idx)
                 idx++;
                 i++;
         }
-        for (int i = 0; e.ports[i]; i++)
-                if (e.ports[i] < 0 || e.ports[i] > 65535)
+        for (int16_t i = 0; e.ports[i]; i++)
+                if (e.ports[i] < 0 || e.ports[i] > UINT16_MAX)
                         return EXIT_FAILURE;
         return EXIT_SUCCESS;
 }
 
-int get_number(char **argv, int idx, int dash)
+/**
+ * get_number - get ports to scan
+ * @argv: string array that contains aruments
+ * @idx: position of the argument
+ * @dash: int8_t set to 1 if there is one dash or -1 if more than one dash
+ * @return 0 on success or 1 on failure
+ */
+int8_t get_number(char **argv, int8_t idx, int8_t dash)
 {
         int i = -1;
 
@@ -125,10 +152,14 @@ int get_number(char **argv, int idx, int dash)
         return EXIT_SUCCESS;
 }
 
+/**
+ * check_options -  checks if ports and scan type are set.
+ *                  If not, set scan type (default all type) and ports to scan (default 1 to 1024)
+ */
 void check_options(void)
 {
         if (!e.ports[0])
-                for (int i = 0, port = 1; port < 1025; i++, port++)
+                for (int16_t i = 0, port = 1; port < 1025; i++, port++)
                         e.ports[i] = port;
         if (!e.scan)
                 e.scan |= ALL;

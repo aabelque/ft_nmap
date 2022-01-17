@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/05 17:41:51 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 02:31:20 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,13 @@
 
 extern t_env e;
 
-int ip_dot(char *ip)
+/**
+ * ip_dot - check if string ip contains dot
+ * @ip: string to check
+ */
+void ip_dot(char *ip)
 {
-        int dot = 0;
+        int8_t dot = 0;
         char *s = ip;
 
         while (*s) {
@@ -24,12 +28,15 @@ int ip_dot(char *ip)
                         dot++;
                 s++;
         }
-        if (dot > 1)
-                return 1;
-        return 0;
+        e.dot = (dot > 1) ? 1 : 0;
 }
 
-static int get_file(char *file)
+/**
+ * get_file - get target ip from file
+ * @file: string that contains a filename
+ * @return 0 on success or 1 on failure
+ */
+static int8_t get_file(char *file)
 {
         char *ip;
 
@@ -44,9 +51,15 @@ static int get_file(char *file)
         return EXIT_SUCCESS;
 }
 
-static int get_ports(char **argv, int idx)
+/**
+ * get_ports - get ports to scan. Checks if it's a port range or not
+ * @argv: string array that contains arguments
+ * @idx: position of the argument
+ * @return 0 on success or 1 on failure
+ */
+static int8_t get_ports(char **argv, int8_t idx)
 {
-        int comma = 0, dash = 0;
+        int8_t dash = 0;
 
         dash = isdash(argv[idx]);
         if (dash == -1)
@@ -56,7 +69,12 @@ static int get_ports(char **argv, int idx)
         return EXIT_SUCCESS;
 }
 
-static int get_nbthread(char *nb_thread)
+/**
+ * get_nbthread - get the number of thread to set for scanning
+ * @nb_thread: string that contains the number of thread
+ * @return 0 on success or 1 on failure (if thread < 0 or thread > 250)
+ */
+static int8_t get_nbthread(char *nb_thread)
 {
         if (strisdigit(nb_thread)) {
                 e.nb_thread = ft_atoi(nb_thread);
@@ -66,7 +84,13 @@ static int get_nbthread(char *nb_thread)
         return EXIT_SUCCESS;
 }
 
-static int get_scan_type(char **argv, int *idx)
+/**
+ * get_scan_type - get all type of scan
+ * @argv: string array that contains arguments
+ * @idx: position of the arguments
+ * @return 0 on success or 1 on failure
+ */
+static int8_t get_scan_type(char **argv, int8_t *idx)
 {
         while (argv[*idx]) {
                 if (!ft_strcmp(argv[*idx], "SYN"))
@@ -82,17 +106,23 @@ static int get_scan_type(char **argv, int *idx)
                 else if (!ft_strcmp(argv[*idx], "UDP"))
                         e.scan |= UDP;
                 else
-                        return EXIT_SUCCESS;
+                        return EXIT_FAILURE;
                 (*idx)++;
         }
         return EXIT_SUCCESS;
 }
 
-int parse_arg(int argc, char **argv)
+/**
+ * parse_arg - parsing arguments and get options
+ * @argc: number of arguments
+ * @argv: string array that contains arguments
+ * @return 0 on success or 1 on failure
+ */
+int8_t parse_arg(int argc, char **argv)
 {
         if (check_duplicate_param(argv, argc))
                 perror_and_exit("You have to use --ip or --hostname or --file");
-        for (int i = 1; i < argc; ++i) {
+        for (int8_t i = 1; i < argc; ++i) {
                 if (!ft_strcmp("--help", argv[i])) {
                         help_menu(EXIT_SUCCESS);
                 } else if (!ft_strcmp("--ip", argv[i])) {

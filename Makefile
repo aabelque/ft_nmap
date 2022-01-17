@@ -6,7 +6,7 @@
 #    By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/12/25 11:44:30 by aabelque          #+#    #+#              #
-#    Updated: 2022/01/11 22:26:45 by aabelque         ###   ########.fr        #
+#    Updated: 2022/01/15 17:22:20 by aabelque         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,6 +33,9 @@ SRC += resolve_host.c
 SRC += scan.c
 SRC += send_packet.c
 SRC += get_response.c
+SRC += decode.c
+SRC += result.c
+SRC += service.c
 
 all: $(NAME)
 

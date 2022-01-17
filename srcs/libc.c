@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:57:59 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/07 17:13:12 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 02:30:38 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ void *ft_memalloc(size_t size)
 
         if ((buff = malloc(size)) == NULL)
                 return NULL;
-        ft_memset(buff, 0, size);
+        ft_memset(buff, '\0', size);
         return buff;
 }
 
@@ -43,7 +43,7 @@ inline void *ft_memset(void *s, int c, size_t n)
         return s;
 }
 
-inline int ft_strlen(const char *s)
+inline size_t ft_strlen(const char *s)
 {
         const char *b = s;
 
@@ -59,7 +59,7 @@ static inline int ft_isdigit(char c)
         return 0;
 }
 
-inline int strisdigit(const char *s)
+inline int8_t strisdigit(const char *s)
 {
         if (!s || !ft_strlen(s))
                 return 0;
@@ -101,7 +101,7 @@ char	*ft_strdup(const char *s)
         return ptr;
 }
 
-int ft_strcmp(const char *s1, const char *s2)
+int8_t ft_strcmp(const char *s1, const char *s2)
 {
         for ( ; *s1 == *s2; s1++, s2++)
                 if (*s1 == '\0')
@@ -109,7 +109,7 @@ int ft_strcmp(const char *s1, const char *s2)
         return *(unsigned char *)s1 - *(unsigned char *)s2;
 }
 
-static inline int ft_isspace(char c)
+static inline int8_t ft_isspace(char c)
 {
         if (c == ' ' || c == '\t' || c == '\f' || c == '\r' \
                         || c == '\n'|| c == '\v')
@@ -117,10 +117,10 @@ static inline int ft_isspace(char c)
         return 0;
 }
 
-int ft_atoi(const char *str)
+int64_t ft_atoi(const char *str)
 {
-        int i, sign;
-        long nbr;
+        int8_t i, sign;
+        int64_t nbr;
 
         i = 0;
         sign = 1;
@@ -140,7 +140,7 @@ int ft_atoi(const char *str)
         return nbr * sign;
 }
 
-static int ft_count_word(char const *s, char c)
+static size_t ft_count_word(char const *s, char c)
 {
         int i = 0;
         size_t count = 0;
@@ -153,7 +153,7 @@ static int ft_count_word(char const *s, char c)
         return count;
 }
 
-static int ft_size_word(char const *s, char c)
+static size_t ft_size_word(char const *s, char c)
 {
         int i = 0;
         size_t siz = 0;
@@ -182,7 +182,7 @@ char **ft_strsplit(char const *s, char c)
                 while (*s == c)
                         s++;
                 size = ft_size_word(s, c);
-                if (!(tab[i] = malloc((size + 1) * sizeof(char))))
+                if (!(tab[i] = malloc(sizeof(char) + (size + 1))))
                         return NULL;
                 ft_strncpy(tab[i], s, size);
                 tab[i][size] = '\0';
@@ -192,7 +192,7 @@ char **ft_strsplit(char const *s, char c)
         return tab;
 }
 
-static int ft_size_number(int n)
+static size_t ft_size_number(int n)
 {
         int count = 0;
 
