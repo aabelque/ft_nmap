@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 18:20:31 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 20:09:21 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,7 @@ int main(int argc, char **argv)
                 exit_errors(ERR_HOSTNAME, e.hostname);
         print_first_line();
         ft_nmap();
+        print_last_line();
         environment_cleanup();
         return EXIT_SUCCESS;
 }

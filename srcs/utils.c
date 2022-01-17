@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 18:50:40 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 22:56:11 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,9 +41,9 @@ void help_menu(int8_t status)
  * @after: struct timeval set after the scan
  * @return the time taken by the scan
  */
-int64_t gettimeval(struct timeval before, struct timeval after)
+double gettimeval(struct timeval before, struct timeval after)
 {
-        register int64_t time;
+        register double time;
 
 	time = (after.tv_sec - before.tv_sec) * 1000.0;
 	time += (after.tv_usec - before.tv_usec) / 1000.0;
@@ -90,6 +90,32 @@ void print_first_line(void)
         info = localtime(&e.tv.tv_sec);
         strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M %Z", info);
         printf("\nStarting ft_nmap (%s) at %s\n", GIT, tbuf);
+}
+
+/**
+ * calculate_scan_time - calculate execute time scan
+ * @start: struct timeval initiate before scan
+ * @end: struct timeval initiate after scan
+ */
+void calculate_scan_time(struct timeval start, struct timeval end)
+{
+        double ts, te;
+
+        ts = (double)start.tv_sec + (double)start.tv_usec / 1000000;
+        te = (double)end.tv_sec + (double)end.tv_usec / 1000000;
+        e.time = te - ts;
+}
+
+/**
+ * print_last_line - print execute time scan and number of target
+ */
+void print_last_line(void)
+{
+        int8_t nb_target;
+        
+        nb_target = (e.dim) ? e.dim : 1;
+        fprintf(stdout, "\nFt_nmap done: %d IP address ", nb_target);
+        fprintf(stdout, "scanned in %.3f seconds\n", e.time);
 }
 
 /**
@@ -203,7 +229,7 @@ static char *create_filter(char *host, uint16_t port, int8_t type)
  * @type: type of scan
  * @return 0 on success or -1 on failure and print the error
  */
-int8_t compile_and_set_filter(t_target *tgt, pcap_t **handle, bpf_u_int32 mask, \
+int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
                 uint16_t port, int8_t type)
 {
         int8_t cc = 0;
@@ -212,17 +238,17 @@ int8_t compile_and_set_filter(t_target *tgt, pcap_t **handle, bpf_u_int32 mask, 
         struct bpf_program fp;
 
         filter = create_filter(tgt->ip, port, type);
-        cc = pcap_compile(*handle, &fp, filter, 0, mask);
+        cc = pcap_compile(handle, &fp, filter, 0, mask);
         if (cc == -1)
                 goto return_failure;
 
-        cc = pcap_setfilter(*handle, &fp);
+        cc = pcap_setfilter(handle, &fp);
         if (cc)
                 goto return_failure;
         goto return_success;
 
 return_failure:
-        sprintf(s, "Bad filter - %s\n", pcap_geterr(*handle));
+        sprintf(s, "Bad filter - %s\n", pcap_geterr(handle));
         fprintf(stderr, "%s", s);
         pcap_freecode(&fp);
         free(filter);
@@ -237,6 +263,7 @@ return_success:
 inline void break_signal(__attribute__((unused))int sig)
 {
         pcap_breakloop(e.handle);
+        alarm(1);
 }
 
 inline void interrupt_signal(__attribute__((unused))int sig)

@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 18:48:53 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 22:38:56 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,10 @@ void environment_setup(void)
         e.newargc = 0;
         e.nb_thread = 0;
         e.udp_socket = 0;
+        e.time = 0.0;
         e.hostname = NULL;
         e.multiple_ip = NULL;
         /* e.to = NULL; */
-        ft_memset(&e.sigalrm, 0, sizeof(e.sigalrm));
         ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
@@ -95,9 +95,9 @@ void environment_cleanup(void)
         e.newargc = 0;
         e.nb_thread = 0;
         e.udp_socket = 0;
+        e.time = 0.0;
         e.hostname = NULL;
         /* e.to = NULL; */
-        ft_memset(&e.sigalrm, 0, sizeof(e.sigalrm));
         ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, '\0', ft_strlen(e.ip));
@@ -226,8 +226,13 @@ void udp_packet_setup(struct udp_packet *pkt, struct in_addr dst, \
 
 void signal_setup(void)
 {
-        e.sigalrm.sa_handler = &break_signal;
-        e.sigalrm.sa_flags = 0;
+        struct sigaction sig_alarm;
+
+        ft_memset(&sig_alarm, 0, sizeof(sig_alarm));
+        sig_alarm.sa_handler = &break_signal;
+        sig_alarm.sa_flags = 0;
+        alarm(1);
+        sigaction(SIGALRM, &sig_alarm, NULL);
 
         e.sigint.sa_handler = &interrupt_signal;
         e.sigint.sa_flags = 0;

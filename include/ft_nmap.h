@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 18:49:50 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 22:42:57 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,6 +117,7 @@ typedef struct  s_env {
         int16_t                 udp_socket;
         uint16_t                seq;
         uint16_t                ports[1025];
+        double                  time;
         char                    *hostname;
         char                    dns[MAXHOST];
         char                    ip[INET_ADDRSTRLEN];
@@ -124,7 +125,6 @@ typedef struct  s_env {
         char                    my_mask[INET_ADDRSTRLEN];
         char                    **multiple_ip;
         struct timeval          tv;
-        struct sigaction        sigalrm;
         struct sigaction        sigint;
         pcap_t                  *handle;
         /* struct sockaddr_in      *to; */
@@ -137,6 +137,7 @@ t_env e;
 /* nmap functions */
 void ft_nmap(void);
 void print_first_line(void);
+void print_last_line(void);
 void print_header(char *hname, char *ip, char *rdns);
 void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
 void null_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
@@ -164,6 +165,7 @@ void check_options(void);
 void ip_dot(char *ip);
 void break_signal(int sig);
 void interrupt_signal(int sig);
+void calculate_scan_time(struct timeval start, struct timeval end);
 int8_t isdash(char *s);
 int8_t get_number(char **argv, int8_t idx, int8_t dash);
 int8_t get_nbip_and_alloc(char *ip);
@@ -172,7 +174,7 @@ int8_t get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask);
 int8_t get_device_ip_and_mask(char *host, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask);
 int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
                 uint16_t port, int8_t type);
-int64_t gettimeval(struct timeval before, struct timeval after);
+double gettimeval(struct timeval before, struct timeval after);
 char *get_ip_from_file(char *file);
 
 /* setup functions */

@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 18:33:08 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/17 23:02:18 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,6 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
         if (send_packet(tgt, port, type))
                 goto return_failure;
 
-        /* sleep(1); */
         gettimeofday(&t1, NULL);
         do {
                 cc = pcap_dispatch(e.handle, 1, callback, (unsigned char *)&data);
@@ -102,18 +101,18 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
                 time += gettimeval(t1, t2);
         } while (time < wait && cc == 0);
 
-        if (cc == 0)
+        if (cc == 0 || cc == -2)
                 if (no_packet(&data))
                         goto return_failure;
         /* goto return_success; */
         pcap_close(e.handle);
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
 
 /* return_success: */
 /*         pcap_close(handle); */
 /*         return EXIT_SUCCESS; */
 return_failure:
-        pcap_close(handle);
+        pcap_close(e.handle);
         return EXIT_FAILURE;
 }
 
@@ -124,6 +123,10 @@ return_failure:
  */
 int8_t process_scan(t_target *target)
 {
+        struct timeval start, end;
+
+        if (gettimeofday(&start, NULL))
+                return EXIT_FAILURE;
         for (int16_t i = 0; e.ports[i]; i++) {
                 for (int8_t shift = 1; shift < 64; shift <<= 1) {
                        if (e.scan & shift)
@@ -131,26 +134,8 @@ int8_t process_scan(t_target *target)
                                        return EXIT_FAILURE;
                 }
         }
-        /* while (e.ports[i]) { */
-        /*         if (e.scan & SYN) */
-        /*                 if (scan(target, SYN, e.ports[i])) */
-        /*                         return EXIT_FAILURE; */
-        /*         if (e.scan & NUL) */
-        /*                 if (scan(target, NUL, e.ports[i])) */
-        /*                         return EXIT_FAILURE; */
-        /*         if (e.scan & ACK) */
-        /*                 if (scan(target, ACK, e.ports[i])) */
-        /*                         return EXIT_FAILURE; */
-        /*         if (e.scan & FIN) */
-        /*                 if (scan(target, FIN, e.ports[i])) */
-        /*                         return EXIT_FAILURE; */
-        /*         if (e.scan & XMAS) */
-        /*                 if (scan(target, XMAS, e.ports[i])) */
-        /*                         return EXIT_FAILURE; */
-        /*         if (e.scan & UDP) */
-        /*                 if (scan(target, UDP, e.ports[i])) */
-        /*                         return EXIT_FAILURE; */
-        /*         i++; */
-        /* } */
+        if (gettimeofday(&end, NULL))
+                return EXIT_FAILURE;
+        calculate_scan_time(start, end);
         return EXIT_SUCCESS;
 }
