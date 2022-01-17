@@ -6,13 +6,16 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:30:10 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/17 02:50:05 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
-//TODO description function parser_helper.c and error.c
+/*! TODO: handle tcp scan */
+/*! TODO: description function parser_helper.c and error.c */
+/*! TODO: handle signal with sigaction() and sigemptyset() */
+/*! TODO: handle speedup opt with pthread */
 
 extern t_env e;
 
@@ -72,8 +75,6 @@ void ft_nmap(void)
 
 int main(int argc, char **argv)
 {
-        /*! TODO: handle signal with sigaction() and sigemptyset() */
-        /*! TODO: handle speedup opt with pthread */
         if (argc < 3)
                 help_menu(EXIT_FAILURE);
         if (getuid() != 0)
