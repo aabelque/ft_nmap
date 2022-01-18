@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 19:26:13 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:02:20 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/18 02:56:09 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,10 +60,9 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
 	addr.sin_addr = dst;
 	addr.sin_port = htons(port);
         udp_packet_setup(&packet, dst, src, port, hlen);
-        e.udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-        if (e.udp_socket == -1)
+        if ((e.udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
                 return EXIT_FAILURE;
-        return sendto(e.udp_socket, (char *)&packet, PACKET_SIZE, \
+        return sendto(e.udp_socket, (char *)&packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
 }
 
@@ -87,9 +86,11 @@ int8_t send_packet(t_target *tgt, uint16_t port, int8_t type)
                 hlen = sizeof(struct tcp_packet);
                 cc = send_tcp_packet(tgt, port, hlen, type);
         }
-        if (cc < 0 || cc != PACKET_SIZE) {
-                fprintf(stderr, "Error sendto, the number of bytes sent is %d\n", cc);
-                return EXIT_FAILURE;
-        }
+        if (cc < 0 || cc != hlen)
+                goto return_failure;
         return EXIT_SUCCESS;
+
+return_failure:
+        fprintf(stderr, "Error sendto, the number of bytes sent is %d\n", cc);
+        return EXIT_FAILURE;
 }

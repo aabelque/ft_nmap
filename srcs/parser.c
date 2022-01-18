@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:31:20 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/18 01:27:56 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,7 @@ static int8_t get_file(char *file)
 {
         char *ip;
 
-        ip = get_ip_from_file(file);
-        if (!ip)
+        if ((ip = get_ip_from_file(file)) == NULL)
                 return EXIT_FAILURE;
         if (get_nbip_and_alloc(ip))
                 return EXIT_FAILURE;
@@ -61,8 +60,7 @@ static int8_t get_ports(char **argv, int8_t idx)
 {
         int8_t dash = 0;
 
-        dash = isdash(argv[idx]);
-        if (dash == -1)
+        if ((dash = isdash(argv[idx])) == -1)
                 return EXIT_FAILURE;
         if (get_number(argv, idx, dash))
                 return EXIT_FAILURE;
@@ -76,9 +74,8 @@ static int8_t get_ports(char **argv, int8_t idx)
  */
 static int8_t get_nbthread(char *nb_thread)
 {
-        if (strisdigit(nb_thread)) {
+        if (strisdigit(nb_thread))
                 e.nb_thread = ft_atoi(nb_thread);
-        }
         if (e.nb_thread < 0 || e.nb_thread > 250)
                 return EXIT_FAILURE;
         return EXIT_SUCCESS;
@@ -92,6 +89,7 @@ static int8_t get_nbthread(char *nb_thread)
  */
 static int8_t get_scan_type(char **argv, int8_t *idx)
 {
+        /*! TODO: refactoring this with array of scan type to get rid of if else */
         while (argv[*idx]) {
                 if (!ft_strcmp(argv[*idx], "SYN"))
                         e.scan |= SYN;

@@ -6,13 +6,13 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 20:09:21 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/18 01:23:03 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
-/*! TODO: handle signal with sigaction() and sigemptyset() */
+/*! TODO: handle SIGINT signal with sigaction() */
 /*! TODO: handle tcp scan */
 /*! TODO: description function parser_helper.c and error.c */
 /*! TODO: handle speedup opt with pthread */

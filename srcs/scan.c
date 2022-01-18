@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 00:51:54 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/18 01:42:06 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ extern t_env e;
  * @data: struct t_pkt_data that contain data info
  * @return 0
  */
-static int8_t no_packet(t_pkt_data *data)
+static void no_packet(t_pkt_data *data)
 {
         int8_t shift, idx;
         void (*func[6])(t_pkt_data *, uint8_t, uint8_t) = {&syn_decode, &null_decode,
@@ -30,7 +30,6 @@ static int8_t no_packet(t_pkt_data *data)
                 if (data->type == shift)
                         func[idx](data, -1, 42);
         }
-        return EXIT_SUCCESS;
 }
 
 /**
@@ -45,7 +44,6 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
         t_pkt_data *pkt_data;
         struct ip *ip;
         struct tcphdr *tcp;
-        struct icmp *icmp;
         struct udphdr *udp;
 
         pkt_data = (t_pkt_data *)arg;
@@ -103,8 +101,7 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
         if (cc == -1)
                 goto return_failure;
         if (cc == 0 || cc == -2)
-                if (no_packet(&data))
-                        goto return_failure;
+                no_packet(&data);
         pcap_close(e.handle);
         return EXIT_SUCCESS;
 

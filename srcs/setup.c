@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 22:38:56 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/18 02:56:21 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ void environment_setup(void)
         e.time = 0.0;
         e.hostname = NULL;
         e.multiple_ip = NULL;
-        /* e.to = NULL; */
         ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
@@ -97,15 +96,14 @@ void environment_cleanup(void)
         e.udp_socket = 0;
         e.time = 0.0;
         e.hostname = NULL;
-        /* e.to = NULL; */
         ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, '\0', ft_strlen(e.ip));
         ft_memset(e.my_ip, '\0', ft_strlen(e.my_ip));
         ft_memset(e.my_mask, '\0', ft_strlen(e.my_mask));
         ft_memset(e.ports, 0, sizeof(e.ports));
+        free_list(e.target->report);
         free_environment();
-        free_list(&e.target->report);
 }
 
 /**
@@ -119,8 +117,7 @@ static int8_t check_loopback(t_target *tgt, char **device)
         int8_t cc = 0;
 
         if (ft_strcmp(*device, "lo")) {
-                cc = get_my_interface(tgt, *device);
-                if (cc)
+                if (get_my_interface(tgt, *device))
                         return EXIT_FAILURE;
         } else {
                 ft_strcpy(e.my_ip, "127.0.0.1");
@@ -158,9 +155,6 @@ int8_t capture_setup(t_target *tgt, uint16_t port, int8_t type)
 
         if (compile_and_set_filter(tgt, e.handle, ip, port, type))
                 return EXIT_FAILURE;
-        /* cc = pcap_setnonblock(*handle, 1, error); */
-        /* if (cc) */
-        /*         return EXIT_FAILURE; */
         return EXIT_SUCCESS;
 
 pcap_open_failure:
@@ -210,7 +204,7 @@ void udp_packet_setup(struct udp_packet *pkt, struct in_addr dst, \
 	(pkt->ip).ip_off = 0;
 	(pkt->ip).ip_hl = sizeof(pkt->ip) >> 2;
 	(pkt->ip).ip_p = IPPROTO_UDP;
-	(pkt->ip).ip_len = 512;
+	(pkt->ip).ip_len = hlen;
 	(pkt->ip).ip_ttl = 64;
 	(pkt->ip).ip_v = IPVERSION;
 	(pkt->ip).ip_id = htons(e.pid + e.seq);
@@ -220,7 +214,7 @@ void udp_packet_setup(struct udp_packet *pkt, struct in_addr dst, \
 
         (pkt->udp).uh_sport = htons(e.pid);
         (pkt->udp).uh_dport = htons(port);
-        (pkt->udp).uh_ulen = htons((unsigned short)(PACKET_SIZE - sizeof(struct ip)));
+        (pkt->udp).uh_ulen = htons((unsigned short)(hlen- sizeof(struct ip)));
         (pkt->udp).uh_sum = 0;
 }
 
@@ -228,6 +222,7 @@ void signal_setup(void)
 {
         struct sigaction sig_alarm;
 
+        sigemptyset(&sig_alarm.sa_mask);
         ft_memset(&sig_alarm, 0, sizeof(sig_alarm));
         sig_alarm.sa_handler = &break_signal;
         sig_alarm.sa_flags = 0;

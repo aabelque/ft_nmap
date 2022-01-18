@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 22:42:57 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/18 02:14:54 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,7 +127,6 @@ typedef struct  s_env {
         struct timeval          tv;
         struct sigaction        sigint;
         pcap_t                  *handle;
-        /* struct sockaddr_in      *to; */
         t_target                *target;
 }               t_env;
 
@@ -186,6 +185,7 @@ void udp_packet_setup(struct udp_packet *pkt, struct in_addr addr, \
 void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr addr, \
                 uint16_t port, int8_t hlen, int8_t type);
 int8_t capture_setup(t_target *tgt, uint16_t port, int8_t type);
+uint16_t number_of_ports(void);
 /* int socket_setup(void); */
 
 /* libc functions */
@@ -209,7 +209,7 @@ int8_t check_duplicate_param(char **av, int ac);
 
 /* list functions */
 void add_node(t_result **list, t_result *new_node);
-void free_list(t_result **list);
+void free_list(t_result *list);
 t_result *find_lastnode(t_result *list);
 t_result *new_node(int8_t state, uint16_t port, char *service);
 

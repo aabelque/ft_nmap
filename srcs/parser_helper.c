@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:31:58 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/18 01:29:41 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,12 +35,11 @@ int8_t get_nbip_and_alloc(char *ip)
                         e.dim++;
                 i++;
         }
-        e.multiple_ip = ft_memalloc(sizeof(char *) * e.dim);
-        if (!e.multiple_ip)
+        if ((e.multiple_ip = ft_memalloc(sizeof(char *) * e.dim)) == NULL)
                 return EXIT_FAILURE;
         for (uint16_t i = 0; i < e.dim; i++) {
-                e.multiple_ip[i] = ft_memalloc(sizeof(char) * INET_ADDRSTRLEN);
-                if (!e.multiple_ip[i])
+                if ((e.multiple_ip[i] = ft_memalloc(sizeof(char) \
+                                                * INET_ADDRSTRLEN)) == NULL)
                         return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -50,8 +49,7 @@ int8_t copy_ips(char *ip)
 {
         for (uint16_t i = 0, j = 0, k = 0; ip[i] != '\0'; i++, k++) {
                 if (ip[i] == '\n') {
-                        j++;
-                        k = -1;
+                        j++; k = -1;
                 } else {
                         e.multiple_ip[j][k] = ip[i];
                 }

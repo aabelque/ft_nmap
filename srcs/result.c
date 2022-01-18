@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/14 15:16:02 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:33:50 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/18 02:12:14 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,7 @@ t_result *new_node(int8_t state, uint16_t port, char *service)
 {
         t_result *new = NULL;
 
-        new = ft_memalloc(sizeof(t_result));
-        if (!new)
+        if ((new = ft_memalloc(sizeof(*new))) == NULL)
                 return NULL;
         new->state = state;
         new->port = port;
@@ -67,13 +66,13 @@ void add_node(t_result **list, t_result *new_node)
  * free_list - free the all linked list
  * @list: addr of the list to free
  */
-void free_list(t_result **list)
+void free_list(t_result *list)
 {
         t_result *tmp;
 
-        while (*list && (*list)->next) {
-                tmp = *list;
-                *list = (*list)->next;
+        while (list) {
+                tmp = list;
+                list = list->next;
                 if (tmp->service)
                         free(tmp->service);
                 free(tmp);

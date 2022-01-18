@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/15 17:09:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/15 17:58:23 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/18 02:41:50 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,13 +23,10 @@ char *get_service(uint16_t port, const char *proto)
         struct servent *serv;
         char *service;
 
-        serv = getservbyport(htons(port), proto);
-        if (!serv)
+        if ((serv = getservbyport(htons(port), proto)) == NULL)
                 return NULL;
-        service = ft_memalloc(ft_strlen(serv->s_name));
-        if (!service)
+        if ((service = ft_memalloc(ft_strlen(serv->s_name) + 1)) == NULL)
                 return NULL;
-        ft_strcpy(service, serv->s_name);
-        return service;
+        return ft_strcpy(service, serv->s_name);
 }
 
