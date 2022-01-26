@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 19:26:13 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 02:56:09 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/26 16:16:33 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,21 +20,31 @@
  * @type: type of scan
  * @return the number of bytes sent on success or 1 on failure
  */
-static int16_t send_tcp_packet(t_target *tgt, uint16_t port, int8_t hlen, int8_t type)
+static int16_t send_tcp_packet(t_target *tgt, uint16_t port, int8_t hlen, uint8_t type)
 {
+        int opt = 1;
         struct tcp_packet packet;
         struct sockaddr_in addr;
+        struct in_addr dst, src;
+
+        dst = tgt->to->sin_addr;
+        if (tgt->src)
+                src = tgt->src->sin_addr;
 
 	ft_memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr = tgt->to->sin_addr;
+	addr.sin_addr = dst;
 	addr.sin_port = htons(port);
 
-        tcp_packet_setup(&packet, tgt->to->sin_addr, port, hlen, type);
+        tcp_packet_setup(&packet, dst, src, port, hlen, type);
+        packet.tcp.th_sum = checksum_tcp(&packet.tcp, dst, src);
 
-        // TODO
-        // Setup socket and sendto
-        return EXIT_SUCCESS;
+        if ((e.tcp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+                return EXIT_FAILURE;
+        if (setsockopt(e.tcp_socket, IPPROTO_IP, IP_HDRINCL, &opt, sizeof(opt)))
+                return EXIT_FAILURE;
+        return sendto(e.tcp_socket, (char *)&packet, hlen, \
+                        0, (struct sockaddr *)&addr, sizeof(addr));
 }
 
 /**
@@ -53,16 +63,17 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
 	ft_memset(&addr, 0, sizeof(addr));
 	ft_memset(&dst, 0, sizeof(dst));
 	ft_memset(&src, 0, sizeof(src));
+
         dst = tgt->to->sin_addr;
         if (tgt->src)
                 src = tgt->src->sin_addr;
 	addr.sin_family = AF_INET;
-	addr.sin_addr = dst;
+	addr.sin_addr = tgt->to->sin_addr;
 	addr.sin_port = htons(port);
-        udp_packet_setup(&packet, dst, src, port, hlen);
+        udp_packet_setup(&packet, tgt->to->sin_addr, src, port, hlen);
         if ((e.udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
                 return EXIT_FAILURE;
-        return sendto(e.udp_socket, (char *)&packet, hlen, \
+        return sendto(e.udp_socket, &packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
 }
 
@@ -73,18 +84,19 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
  * @type: type of scan
  * @return 0 on success. On failure print error and return 1
  */
-int8_t send_packet(t_target *tgt, uint16_t port, int8_t type)
+int8_t send_packet(t_target *tgt, uint16_t port, uint8_t type)
 {
         int8_t hlen = 0;
         int16_t cc = 0;
 
-        if (type == UDP) {
+        if (type & UDP) {
                 hlen = sizeof(struct udp_packet);
                 cc = send_udp_packet(tgt, port, hlen);
                 close(e.udp_socket);
         } else {
                 hlen = sizeof(struct tcp_packet);
                 cc = send_tcp_packet(tgt, port, hlen, type);
+                close(e.tcp_socket);
         }
         if (cc < 0 || cc != hlen)
                 goto return_failure;

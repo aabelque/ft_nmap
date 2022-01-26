@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 02:55:25 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/25 17:36:30 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,21 +43,21 @@ void calculate_scan_time(struct timeval start, struct timeval end)
         e.time += te - ts;
 }
 
-/* unsigned short checksum(void *addr, int len) */
-/* { */
-/*         unsigned long checksum = 0; */
-/*         unsigned short *buf = addr; */
+uint16_t checksum(void *addr, int len)
+{
+        unsigned long checksum = 0;
+        unsigned short *buf = addr;
 
-/*         while (len > 1) { */
-/*                 checksum += (unsigned short)*buf++; */
-/*                 len -= sizeof(unsigned short); */
-/*         } */
-/*         if (len) */
-/*                 checksum += *(unsigned char *)buf; */
-/*         checksum = (checksum >> 16) + (checksum & 0xffff); */
-/*         checksum = checksum + (checksum >> 16); */
-/*         return (unsigned short)(~checksum); */
-/* } */
+        while (len > 1) {
+                checksum += (unsigned short)*buf++;
+                len -= sizeof(unsigned short);
+        }
+        if (len)
+                checksum += *(unsigned char *)buf;
+        checksum = (checksum >> 16) + (checksum & 0xffff);
+        checksum = checksum + (checksum >> 16);
+        return (unsigned short)(~checksum);
+}
 
 /**
  * number_of_ports - get the total number of ports to scan
@@ -74,26 +74,18 @@ uint16_t number_of_ports(void)
 
 /**
  * get_device_ip_and_mask - get interface name (device), ip and submask
- * @host: string containing address of host
+ * @tgt: struct t_target that contains target info
  * @device: address of string to store interface name
  * @ip: uint32_t to store the ip
  * @mask: uint32_t to store the submask
  * @return 0 on success or -1 on failure
  */
-int8_t get_device_ip_and_mask(char *host, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask)
+int8_t get_device_ip_and_mask(t_target *tgt, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask)
 {
-        char dev[3];
         char error[ERRBUF];
 
-        ft_memset(dev, '\0', sizeof(dev));
         ft_memset(error, '\0', sizeof(error));
-        if (!ft_strcmp(host, "127.0.0.1")) {
-                ft_strcpy(dev, "lo");
-                *device = dev;
-                ft_strcpy(e.my_ip, "127.0.0.1");
-                return EXIT_SUCCESS;
-        }
-        if ((*device = pcap_lookupdev(error)) == NULL)
+        if (get_my_interface(tgt, device))
                 goto return_failure;
         if (pcap_lookupnet(*device, ip, mask, error) == -1)
                 goto return_failure;
@@ -110,8 +102,11 @@ return_failure:
  */
 inline void break_signal(__attribute__((unused))int sig)
 {
+        int8_t cc;
+
         pcap_breakloop(e.handle);
-        alarm(1);
+        cc = ft_strcmp(e.target->ip, "127.0.0.1") ? 1 : 3;
+        alarm(cc);
 }
 
 /**

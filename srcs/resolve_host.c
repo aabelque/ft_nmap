@@ -6,11 +6,12 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/29 23:08:06 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 02:16:49 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/19 23:13:07 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
+#include <net/if.h>
 
 extern t_env e;
 
@@ -88,26 +89,30 @@ static int8_t resolve_host(t_target *target, bool many)
  * @interface: string containing interface name
  * @return 0 on success or 1 on failure
  */
-int8_t get_my_interface(t_target *tgt, char *interface)
+int8_t get_my_interface(t_target *tgt, char **device)
 {
         struct ifaddrs *ifaddr;
         struct ifaddrs *ifa;
-        struct sockaddr_in *sa;
 
         if (getifaddrs(&ifaddr) == -1)
                 return EXIT_FAILURE;
         for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
-                if (ifa->ifa_addr->sa_family == AF_INET \
-                                && !ft_strcmp(interface, ifa->ifa_name)) {
-                        sa = (struct sockaddr_in *)ifa->ifa_addr;
-                        if ((tgt->src = ft_memalloc(sizeof(*tgt->src))) == NULL)
-                                return EXIT_FAILURE;
-                        ft_memcpy(tgt->src, sa, sizeof(*sa));
-                        ft_strcpy(e.my_ip, inet_ntoa(tgt->src->sin_addr));
+                if (is_loopback(tgt->ip, ifa)) {
+                        if (get_interface_name(tgt, ifa, device))
+                                goto return_failure;
+                        break;
+                } else if (is_eth_interface(ifa)) {
+                        if (get_interface_name(tgt, ifa, device))
+                                goto return_failure;
+                        break;
                 }
         }
         freeifaddrs(ifaddr);
         return EXIT_SUCCESS;
+
+return_failure:
+        freeifaddrs(ifaddr);
+        return EXIT_FAILURE;
 }
 
 /**

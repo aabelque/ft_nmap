@@ -6,7 +6,7 @@
 /*   By: zizou </var/mail/zizou>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 01:02:51 by zizou             #+#    #+#             */
-/*   Updated: 2022/01/18 01:19:36 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/26 19:13:36 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
  * @type: type of scan
  * @return the filter
  */
-static char *create_filter(char *host, uint16_t port, int8_t type)
+static char *create_filter(char *host, uint16_t port, uint8_t type)
 {
         char *filter;
 
@@ -27,16 +27,16 @@ static char *create_filter(char *host, uint16_t port, int8_t type)
                 return NULL;
         if (type == UDP)
                 sprintf(filter, \
-                        "(udp and src host %s and src port %u and dst host %s)" \
+                        "(icmp and src host %s and dst host %s)" \
                         " || " \
-                        "(icmp and src host %s and dst host %s)", \
-                        host, port, e.my_ip, host, e.my_ip);
+                        "(udp and src host %s and dst host %s)", \
+                        host, e.my_ip, host, e.my_ip);
         else
                 sprintf(filter, \
-                        "(tcp and src host %s and src port %d and dst host %s)" \
+                        "(tcp and src host %s and dst host %s)" \
                         " || " \
                         "(icmp and src host %s and dst host %s)", \
-                        e.my_ip, port, host, e.my_ip, host);
+                        host, e.my_ip, host, e.my_ip);
         return filter;
 }
 
@@ -50,7 +50,7 @@ static char *create_filter(char *host, uint16_t port, int8_t type)
  * @return 0 on success or -1 on failure and print the error
  */
 int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
-                uint16_t port, int8_t type)
+                uint16_t port, uint8_t type)
 {
         char *filter;
         char s[ERRBUF];

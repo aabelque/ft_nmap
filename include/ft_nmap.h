@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 02:14:54 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/26 16:57:08 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/if_ether.h>
+#include <linux/if_packet.h>
+#include <net/ethernet.h>
+#include <netinet/ether.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/udp.h>
 #include <netinet/ip.h>
@@ -29,6 +33,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
 #include <bits/types.h>
 #include <sys/time.h>
 #include <pthread.h>
@@ -41,7 +47,7 @@
 #define PACKET_SIZE 512
 #define ERRBUF PCAP_ERRBUF_SIZE
 #define OFFSET 14
-/* #define for_range(i, start, end) for(uint8_t i = start; i < end; i += 1) */
+#define for_eachtype(i, shift, start, end) for (uint8_t i = 0, shift = start; shift < end && i < 6; i += 1, shift <<= 1)
 
 /* Define error type */
 #define ERR_HOSTNAME 1
@@ -68,6 +74,16 @@ enum e_state_type {
         
 };
 
+/* tcp pseudo header */
+typedef struct s_psdohdr {
+        uint32_t        saddr;
+        uint32_t        daddr;
+        uint8_t          zero;
+        uint8_t         proto;
+        uint16_t        len;
+        struct tcphdr   tcp;
+} t_psdohdr;
+
 /* packet tcp structure */
 struct tcp_packet {
         struct ip       ip;
@@ -80,10 +96,16 @@ struct udp_packet {
         struct udphdr   udp;
 };
 
+typedef struct s_scan {
+        uint8_t         state;
+        uint8_t         type;
+        struct s_scan   *next;
+} t_scan;
+
 typedef struct  s_result {
-        int8_t                  state;
         uint16_t                port;
         char                    *service;
+        t_scan                  *scan;
         struct s_result         *next;
 }               t_result;
 
@@ -99,7 +121,7 @@ typedef struct  s_target {
 
 /* packet data structure */
 typedef struct  s_pkt_data {
-        int8_t          type;
+        uint8_t          type;
         uint16_t        port;
         t_target        *tgt;
 }               t_pkt_data;
@@ -112,9 +134,10 @@ typedef struct  s_env {
         int8_t                  newargc;
         uint8_t                 scan;
         uint8_t                 nb_thread;
+        int16_t                 udp_socket;
+        int16_t                 tcp_socket;
         uint16_t                dim;
         uint16_t                pid;
-        int16_t                 udp_socket;
         uint16_t                seq;
         uint16_t                ports[1025];
         double                  time;
@@ -137,20 +160,25 @@ t_env e;
 void ft_nmap(void);
 void print_first_line(void);
 void print_last_line(void);
+void print_result(t_result *r);
 void print_header(char *hname, char *ip, char *rdns);
-void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
-void null_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
-void ack_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
-void fin_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
-void xmas_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
-void udp_decode(t_pkt_data *data, uint8_t code, uint8_t flags);
-/* void resolve_dns(struct sockaddr *addr, t_target *target, bool many); */
+void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist);
+void null_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist);
+void ack_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist);
+void fin_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist);
+void xmas_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist);
+void udp_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist);
+void print_syn_result(uint8_t state);
+void print_null_result(uint8_t state);
+void print_ack_result(uint8_t state);
+void print_fin_result(uint8_t state);
+void print_xmas_result(uint8_t state);
+void print_udp_result(uint8_t state);
 int8_t parse_arg(int argc, char **argv);
-/* int resolve_host(t_target *target, bool many); */
-int8_t get_my_interface(t_target *tgt, char *interface);
+int8_t get_my_interface(t_target *tgt, char **device);
 int8_t set_and_resolve_hosts(void);
 int8_t process_scan(t_target *tgt);
-int8_t send_packet(t_target *tgt, uint16_t port, int8_t type);
+int8_t send_packet(t_target *tgt, uint16_t port, uint8_t type);
 int8_t get_udp_response(struct udphdr *udp, t_pkt_data *pkt);
 int8_t get_tcp_response(struct tcphdr *tcp, t_pkt_data *pkt);
 int8_t get_icmp_response(const u_char *data, t_pkt_data *pkt);
@@ -160,19 +188,22 @@ char *get_service(uint16_t port, const char *proto);
 /* utils functions */
 void help_menu(int8_t status);
 void check_options(void);
-/* int get_nb_of_comma(char *s); */
 void ip_dot(char *ip);
 void break_signal(int sig);
 void interrupt_signal(int sig);
 void calculate_scan_time(struct timeval start, struct timeval end);
+int8_t is_loopback(char *ip, struct ifaddrs *ifa);
+int8_t is_eth_interface(struct ifaddrs *ifa);
+int8_t get_interface_name(t_target *tgt, struct ifaddrs *ifa, char **device);
 int8_t isdash(char *s);
 int8_t get_number(char **argv, int8_t idx, int8_t dash);
 int8_t get_nbip_and_alloc(char *ip);
 int8_t copy_ips(char *ip);
 int8_t get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask);
-int8_t get_device_ip_and_mask(char *host, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask);
+int8_t get_device_ip_and_mask(t_target *tgt, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask);
 int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
-                uint16_t port, int8_t type);
+                uint16_t port, uint8_t type);
+uint16_t checksum(void *addr, int len);
 double gettimeval(struct timeval before, struct timeval after);
 char *get_ip_from_file(char *file);
 
@@ -183,10 +214,11 @@ void signal_setup(void);
 void udp_packet_setup(struct udp_packet *pkt, struct in_addr addr, \
                 struct in_addr src, uint16_t port, int8_t hlen);
 void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr addr, \
-                uint16_t port, int8_t hlen, int8_t type);
-int8_t capture_setup(t_target *tgt, uint16_t port, int8_t type);
+                struct in_addr src, uint16_t port, int8_t hlen, uint8_t type);
+int8_t capture_setup(t_target *tgt, uint16_t port, uint8_t type);
 uint16_t number_of_ports(void);
-/* int socket_setup(void); */
+/* uint16_t checksum_tcp(struct tcphdr *htcp, struct in_addr dst, struct in_addr src); */
+uint16_t checksum_tcp(struct tcphdr *p, struct in_addr dst, struct in_addr src);
 
 /* libc functions */
 int8_t ft_strcmp(const char *s1, const char *s2);
@@ -210,7 +242,9 @@ int8_t check_duplicate_param(char **av, int ac);
 /* list functions */
 void add_node(t_result **list, t_result *new_node);
 void free_list(t_result *list);
+void update_node(t_result *list, uint8_t type, uint8_t state, uint16_t port);
+bool is_node_exist(t_result *list, uint16_t port);
 t_result *find_lastnode(t_result *list);
-t_result *new_node(int8_t state, uint16_t port, char *service);
+t_result *new_node(uint8_t state, uint8_t type, uint16_t port, char *service);
 
 #endif

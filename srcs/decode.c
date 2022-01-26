@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/13 14:25:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 01:19:12 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/26 23:53:21 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,35 @@
  * @code: tcp|icmp code response
  * @flags: flags of tcp response
  */
-void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
+void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
 {
-        printf("syn - flags %d - code %d\n", flags, code);
+        uint8_t state = 0;
+        uint16_t port = data->port;
+
+        switch (code) {
+        case 1:
+        case 2:
+        case 3:
+        case 9:
+        case 10:
+        case 13:
+                state |= S_FI;
+                break;
+        case 255:
+                if (flags == 0)
+                        state |= S_FI;
+                break;
+        case 42:
+                state |= S_OP;
+                break;
+        case 21:
+                state |= S_CL;
+                break;
+        }
+        if (exist)
+                update_node(data->tgt->report, SYN, state, port);
+        else
+                add_node(&data->tgt->report, new_node(state, SYN, port, get_service(port, NULL)));
 }
 
 /**
@@ -29,9 +55,26 @@ void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
  * @code: tcp|icmp code response
  * @flags: flags of tcp response
  */
-void null_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
+void null_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
 {
-        printf("null - flags %d - code %d\n", flags, code);
+        uint8_t state = 0;
+        uint16_t port = data->port;
+
+        switch (code) {
+        case 21:
+                state |= S_CL;
+                break;
+        case 255:
+                state |= S_OF;
+                break;
+        default:
+                state |= S_FI;
+                break;
+        }
+        if (exist)
+                update_node(data->tgt->report, NUL, state, port);
+        else
+                add_node(&data->tgt->report, new_node(state, NUL, port, get_service(port, NULL)));
 }
 
 /**
@@ -40,9 +83,23 @@ void null_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
  * @code: tcp|icmp code response
  * @flags: flags of tcp response
  */
-void ack_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
+void ack_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
 {
-        printf("ack - flags %d - code %d\n", flags, code);
+        uint8_t state = 0;
+        uint16_t port = data->port;
+
+        switch (code) {
+        case 21:
+                state |= S_UF;
+                break;
+        default:
+                state |= S_FI;
+                break;
+        }
+        if (exist)
+                update_node(data->tgt->report, ACK, state, port);
+        else
+                add_node(&data->tgt->report, new_node(state, ACK, port, get_service(port, NULL)));
 }
 
 /**
@@ -51,9 +108,26 @@ void ack_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
  * @code: tcp|icmp code response
  * @flags: flags of tcp response
  */
-void fin_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
+void fin_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
 {
-        printf("fin - flags %d - code %d\n", flags, code);
+        uint8_t state = 0;
+        uint16_t port = data->port;
+
+        switch (code) {
+        case 21:
+                state |= S_CL;
+                break;
+        case 255:
+                state |= S_OF;
+                break;
+        default:
+                state |= S_FI;
+                break;
+        }
+        if (exist)
+                update_node(data->tgt->report, FIN, state, port);
+        else
+                add_node(&data->tgt->report, new_node(state, FIN, port, get_service(port, NULL)));
 }
 
 /**
@@ -62,9 +136,26 @@ void fin_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
  * @code: tcp|icmp code response
  * @flags: flags of tcp response
  */
-void xmas_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
+void xmas_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
 {
-        printf("xmas - flags %d - code %d\n", flags, code);
+        uint8_t state = 0;
+        uint16_t port = data->port;
+
+        switch (code) {
+        case 21:
+                state |= S_CL;
+                break;
+        case 255:
+                state |= S_OF;
+                break;
+        default:
+                state |= S_FI;
+                break;
+        }
+        if (exist)
+                update_node(data->tgt->report, XMAS, state, port);
+        else
+                add_node(&data->tgt->report, new_node(state, XMAS, port, get_service(port, NULL)));
 }
 
 /**
@@ -73,21 +164,23 @@ void xmas_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
  * @code: icmp code response
  * @flags: flags of tcp response, not used. Needed for pointer function
  */
-void udp_decode(t_pkt_data *data, uint8_t code, uint8_t flags)
+void udp_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
 {
-        int8_t state = 0;
+        uint8_t state = 0;
         uint16_t port = data->port;
 
-        switch (code) {
-        case 255:
+        if (code != 255) {
+                if (code == 3)
+                        state |= S_CL;
+                else
+                        state |= S_FI;
+        } else if (flags == 0 && code == 255) {
                 state |= S_OF;
-                break;
-        case 3:
-                state |= S_CL;
-                break;
-        default:
-                state |= S_FI;
-                break;
+        } else {
+                state |= S_OP;
         }
-        add_node(&data->tgt->report, new_node(state, port, get_service(port, NULL)));
+        if (exist)
+                update_node(data->tgt->report, UDP, state, port);
+        else
+                add_node(&data->tgt->report, new_node(state, UDP, port, get_service(port, NULL)));
 }

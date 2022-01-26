@@ -3,14 +3,102 @@
 /*                                                        :::      ::::::::   */
 /*   print.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zizou </var/mail/zizou>                    +#+  +:+       +#+        */
+/*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/18 00:59:28 by zizou             #+#    #+#             */
-/*   Updated: 2022/01/18 01:35:12 by aabelque         ###   ########.fr       */
+/*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
+/*   Updated: 2022/01/27 00:52:12 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
+
+static void print_state(uint8_t state, int8_t *type, bool *first)
+{
+        int8_t space;
+
+        space = ft_strlen((char *)type) == 4 ? 1 : 2;
+        *first = *first == true ? false : printf("%17s", "");
+        if (state & S_OP) {
+                /* *first = *first == true ? false : printf("%17s", ""); */
+                fprintf(stdout, "%s%*s- %s\n", type, space, "", "Open");
+        } else if (state & S_CL) {
+                /* *first = *first == true ? false : printf("%18s", ""); */
+                fprintf(stdout, "%s%*s- %s\n", type, space, "", "Closed");
+        } else if (state & S_FI) {
+                /* *first = *first == true ? false : printf("%s", ""); */
+                fprintf(stdout, "%s%*s- %s\n", type, space, "", "Filtered");
+        } else if (state & S_UF) {
+                /* *first = *first == true ? false : printf("%27s", ""); */
+                fprintf(stdout, "%s%*s- %s\n", type, space, "", "Unfiltered");
+        } else if (state & S_OF) {
+                /* *first = *first == true ? false : printf("%30s", ""); */
+                fprintf(stdout, "%s%*s- %s\n", type, space, "", "Open|Filtered");
+        } else if (state & S_CF) {
+                /* *first = *first == true ? false : printf("%30s", ""); */
+                fprintf(stdout, "%s%*s- %s\n", type, space, "", "Closed|Filtered");
+        }
+}
+
+static void print_each_state(t_scan *scan, bool *first)
+{
+        uint8_t shift, i;
+        int8_t type[6][5] = {"syn\0", "null\0",
+                "ack\0", "fin\0", "xmas\0", "udp\0"};
+
+        for (shift = 1, i = 0; shift < 64 && i < 6; shift <<= 1, i++) {
+                if (scan->type & shift) {
+                        print_state(scan->state, type[i], first);
+                }
+        }
+}
+
+static void print_each_port(t_result *r, bool *first)
+{
+        fprintf(stdout, "%*d", -5, r->port);
+        fprintf(stdout, "%*s", -12, r->service ? r->service : "Unassigned");
+        for (t_scan *s = r->scan; s; s = s->next) {
+                print_each_state(s, first);
+                *first = false;
+        }
+}
+
+static void get_each_port(t_result *r)
+{
+        bool first = true;
+        t_result *p = r;
+
+        while (p) {
+                print_each_port(p, &first);
+                first = true;
+                p = p->next;
+        }
+}
+
+static char *fill_dash(int8_t from, int8_t to)
+{
+        uint8_t size = 29;
+        char *dash, *tmp;
+        
+        dash = ft_memalloc(sizeof(char) * (size + 1));
+        ft_memset(dash, '\0', ft_strlen(dash));
+        tmp = dash;
+        for (int i = 0; i < size; i++) {
+                tmp[i] = to;
+        }
+        return dash;
+}
+
+void print_result(t_result *r)
+{
+        char *dash;
+        t_result *tmp = r;
+
+        dash = fill_dash(0, '-');
+        fprintf(stdout,"Scan result:\n");
+        fprintf(stdout, "%s%8s%10s\n%s\n", "PORT", "SERVICE", "STATE", dash);
+        get_each_port(tmp);
+        free(dash);
+}
 
 /**
  * print_first_line - print date and schedule before nmap header
@@ -22,7 +110,7 @@ void print_first_line(void)
 
         info = localtime(&e.tv.tv_sec);
         strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M %Z", info);
-        printf("\nStarting ft_nmap (%s) at %s\n", GIT, tbuf);
+        fprintf(stdout, "\nStarting ft_nmap at %s\n", tbuf);
 }
 
 /**
@@ -48,32 +136,33 @@ void print_header(char *hname, char *ip, char *rdns)
         if (!hname)
                 hname = ip;
         if (e.dot && rdns)
-                printf("Ft_nmap scan report for %s (%s)\n", rdns, ip);
+                fprintf(stdout, "Ft_nmap scan report for %s (%s)\n", rdns, ip);
         else
-                printf("Ft_nmap scan report for %s (%s)\n", hname, ip);
+                fprintf(stdout, "Ft_nmap scan report for %s (%s)\n", hname, ip);
         if (!e.dot && rdns)
-                printf("rDNS record for %s: %s\n", hname, rdns); 
-        printf("\nNumber of Ports to scan: %d\n", number_of_ports());
-        printf("Number of threads: %d\n", e.nb_thread);
-        printf("Scans to be performed: ");
+                fprintf(stdout, "rDNS record for %s: %s\n", hname, rdns); 
+        fprintf(stdout, "\nScan configurations:\n");
+        fprintf(stdout, "Number of ports to scan: %d\n", number_of_ports());
+        fprintf(stdout, "Number of threads: %d\n", e.nb_thread);
+        fprintf(stdout, "Scans to be performed: ");
         if (!e.scan) {
-                printf("SYN NULL ACK FIN XMAS UDP");
+                fprintf(stdout, "SYN NULL ACK FIN XMAS UDP");
         } else {
                 /*! TODO: refactoring this with array of scan type and for loop ?? */
                 if (e.scan & SYN)
-                        printf("SYN ");
+                        fprintf(stdout, "SYN ");
                 if (e.scan & NUL)
-                        printf("NULL ");
+                        fprintf(stdout, "NULL ");
                 if (e.scan & ACK)
-                        printf("ACK ");
+                        fprintf(stdout, "ACK ");
                 if (e.scan & FIN)
-                        printf("FIN ");
+                        fprintf(stdout, "FIN ");
                 if (e.scan & XMAS)
-                        printf("XMAS ");
+                        fprintf(stdout, "XMAS ");
                 if (e.scan & UDP)
-                        printf("UDP ");
+                        fprintf(stdout, "UDP ");
         }
-        printf("\n\n");
+        fprintf(stdout, "\n\n");
 }
 
 /**
@@ -82,7 +171,7 @@ void print_header(char *hname, char *ip, char *rdns)
  */
 void help_menu(int8_t status)
 {
-        printf("Help Screen\n"
+        fprintf(stdout, "Help Screen\n"
                 "Usage: ft_nmap [--ip x.x.x.x OR --file file.txt OR"
                 " --hostname example.fr] --ports RANGE/NUMBER --speedup NUMBER --scan TYPE\n"
                 "ft_nmap [OPTIONS]\n"

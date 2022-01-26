@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 01:42:06 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/26 23:25:35 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,13 +22,13 @@ extern t_env e;
  */
 static void no_packet(t_pkt_data *data)
 {
-        int8_t shift, idx;
-        void (*func[6])(t_pkt_data *, uint8_t, uint8_t) = {&syn_decode, &null_decode,
+        uint8_t type  = 0, i = 0, start = 1, end = 64;
+        void (*func[6])(t_pkt_data *, uint8_t, uint8_t, bool) = {&syn_decode, &null_decode,
                 &ack_decode, &fin_decode, &xmas_decode, &udp_decode};
 
-        for (idx = 0, shift = 1; shift < 64 && idx < 6; shift <<= 1, idx++) {
-                if (data->type == shift)
-                        func[idx](data, -1, 42);
+        for_eachtype(i, type, start, end) {
+                if (data->type == type)
+                        func[i](data, -1, 0, is_node_exist(data->tgt->report, data->port));
         }
 }
 
@@ -48,20 +48,21 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
 
         pkt_data = (t_pkt_data *)arg;
         data += OFFSET;
-
         ip = (struct ip *)data;
         hlen = ip->ip_hl << 2;
-
         switch (ip->ip_p) {
         case IPPROTO_TCP:
+                printf("tcp\n");
                 tcp = (struct tcphdr *)(data + hlen);
-                /* get_tcp_response(tcp, pkt_data); */
+                get_tcp_response(tcp, pkt_data);
                 break;
         case IPPROTO_UDP:
+                printf("udp\n");
                 udp = (struct udphdr *)(data + hlen);
                 get_udp_response(udp, pkt_data);
                 break;
         case IPPROTO_ICMP:
+                printf("icmp\n");
                 get_icmp_response(data, pkt_data);
                 break;
         default:
@@ -78,10 +79,10 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
  * @port: port to scan
  * @return 0 on success or 1 on failure
  */
-static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
+static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
 {
-        int8_t cc = 0;
-        int16_t wait = 300;
+        int8_t cc = 0, cnt = 0;
+        int16_t wait = 500;
         int64_t time = 0.0;
         struct timeval t1, t2;
         t_pkt_data data;
@@ -91,10 +92,10 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
                 goto return_failure;
         if (send_packet(tgt, port, type))
                 goto return_failure;
-
+        cnt = ft_strcmp(tgt->ip, "127.0.0.1") ? 1 : 2;
         gettimeofday(&t1, NULL);
         do {
-                cc = pcap_dispatch(e.handle, 1, callback, (uint8_t *)&data);
+                cc = pcap_dispatch(e.handle, cnt, callback, (u_char *)&data);
                 gettimeofday(&t2, NULL);
                 time += gettimeval(t1, t2);
         } while (time < wait && cc == 0);
@@ -102,10 +103,12 @@ static int8_t scan(t_target *tgt, int8_t type, uint16_t port)
                 goto return_failure;
         if (cc == 0 || cc == -2)
                 no_packet(&data);
+        free(tgt->src);
         pcap_close(e.handle);
         return EXIT_SUCCESS;
 
 return_failure:
+        free(tgt->src);
         pcap_close(e.handle);
         return EXIT_FAILURE;
 }
@@ -117,14 +120,15 @@ return_failure:
  */
 int8_t process_scan(t_target *target)
 {
+        uint8_t end_type = 64;
         struct timeval start, end;
 
         if (gettimeofday(&start, NULL))
                 return EXIT_FAILURE;
         for (int16_t i = 0; e.ports[i]; i++) {
-                for (int8_t shift = 1; shift < 64; shift <<= 1) {
-                       if (e.scan & shift)
-                               if (scan(target, shift, e.ports[i]))
+                for (int8_t type = 1; type < end_type; type <<= 1) {
+                       if (e.scan & type)
+                               if (scan(target, type, e.ports[i]))
                                        return EXIT_FAILURE;
                 }
         }
