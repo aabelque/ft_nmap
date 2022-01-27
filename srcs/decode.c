@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/13 14:25:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/26 23:53:21 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/27 00:58:57 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,6 @@ void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
         uint16_t port = data->port;
 
         switch (code) {
-        case 1:
-        case 2:
-        case 3:
-        case 9:
-        case 10:
-        case 13:
-                state |= S_FI;
-                break;
         case 255:
                 if (flags == 0)
                         state |= S_FI;
@@ -41,6 +33,9 @@ void syn_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
                 break;
         case 21:
                 state |= S_CL;
+                break;
+        default:
+                state |= S_FI;
                 break;
         }
         if (exist)

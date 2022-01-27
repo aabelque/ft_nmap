@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/27 00:52:12 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/27 00:57:47 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ static void print_each_state(t_scan *scan, bool *first)
         int8_t type[6][5] = {"syn\0", "null\0",
                 "ack\0", "fin\0", "xmas\0", "udp\0"};
 
+        /*! TODO: replace for loop by for_eachtype loop */
         for (shift = 1, i = 0; shift < 64 && i < 6; shift <<= 1, i++) {
                 if (scan->type & shift) {
                         print_state(scan->state, type[i], first);
@@ -148,7 +149,7 @@ void print_header(char *hname, char *ip, char *rdns)
         if (!e.scan) {
                 fprintf(stdout, "SYN NULL ACK FIN XMAS UDP");
         } else {
-                /*! TODO: refactoring this with array of scan type and for loop ?? */
+                /*! TODO: refactoring this with array of scan type and for loop or for_eachtype loop ?? */
                 if (e.scan & SYN)
                         fprintf(stdout, "SYN ");
                 if (e.scan & NUL)
