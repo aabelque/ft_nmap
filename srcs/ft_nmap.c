@@ -6,15 +6,13 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/25 16:12:33 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 18:34:36 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
-/*! TODO: fix error valgrind, get rid off pcap_lookupdev and use getifaddrs */
 /*! TODO: handle SIGINT signal with sigaction() */
-/*! TODO: handle tcp scan */
 /*! TODO: description function parser_helper.c and error.c */
 /*! TODO: handle speedup opt with pthread */
 
@@ -27,24 +25,22 @@ extern t_env e;
  * @target      struct t_target that contain target(s)
  *
  */
-void *nmap_scan(void *target)
+void *nmap_scan(void *ports)
 {
         uint16_t i = -1;
-        t_target *tgt = (t_target *)target;
+        uint16_t *p = (uint16_t *)ports;
+        t_target *tgt = (t_target *)e.target;
 
-        /* print_header(tgt->hname, tgt->ip, tgt->rdns); */
-        /* print_result(); */
         if (e.dim) {
                 while (++i < e.dim) {
                         print_header(tgt[i].hname, tgt[i].ip, tgt[i].rdns);
-                        if (process_scan(&tgt[i]))
+                        if (process_scan(&tgt[i], p))
                                 return NULL;
-                        /* print_result(); */
+                        print_result(tgt[i].report);
                         write(1, "\n", 1);
                 }
         } else {
-                print_header(tgt->hname, tgt->ip, tgt->rdns);
-                if (process_scan(tgt))
+                if (process_scan(tgt, p))
                         return NULL;
                 print_result(tgt->report);
         }
@@ -56,13 +52,17 @@ void *nmap_scan(void *target)
  */
 void ft_nmap(void)
 {
-        void *target;
+        void *ports;
 
-        target = (void *)e.target;
-        /* if (!e.nb_thread) */
-        nmap_scan(target);
-        /* else */
-        /*         create_thread(); */
+        /* target = (void *)e.target; */
+        pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+        e.mutex = &mutex;
+        print_header(e.target->hname, e.target->ip, e.target->rdns);
+        if (!e.nb_thread)
+                nmap_scan(e.ports);
+        else
+                if (create_thread(ports))
+                        return ;
 }
 
 int main(int argc, char **argv)

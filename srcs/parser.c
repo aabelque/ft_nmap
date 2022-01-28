@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 01:27:56 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/27 16:38:11 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,8 @@ static int8_t get_file(char *file)
         char *ip;
 
         if ((ip = get_ip_from_file(file)) == NULL)
+                return EXIT_FAILURE;
+        if (ft_strlen(ip) > 16)
                 return EXIT_FAILURE;
         if (get_nbip_and_alloc(ip))
                 return EXIT_FAILURE;
@@ -87,26 +89,50 @@ static int8_t get_nbthread(char *nb_thread)
  * @idx: position of the arguments
  * @return 0 on success or 1 on failure
  */
-static int8_t get_scan_type(char **argv, int8_t *idx)
+static int8_t get_scan_type(char *argv)
 {
+        bool found;
+        uint8_t i, j;
+        uint8_t enum_type[6] = {SYN, NUL, ACK, FIN, XMAS, UDP};
+        char str_type[6][5] = {"SYN\0", "NULL\0",
+                "ACK\0", "FIN\0", "XMAS\0", "UDP\0"};
+        char **type = NULL;
+        
+        if ((type = ft_strsplit(argv, ',')) == NULL)
+                return EXIT_FAILURE;
         /*! TODO: refactoring this with array of scan type to get rid of if else */
-        while (argv[*idx]) {
-                if (!ft_strcmp(argv[*idx], "SYN"))
-                        e.scan |= SYN;
-                else if (!ft_strcmp(argv[*idx], "NULL"))
-                        e.scan |= NUL;
-                else if (!ft_strcmp(argv[*idx], "ACK"))
-                        e.scan |= ACK;
-                else if (!ft_strcmp(argv[*idx], "FIN"))
-                        e.scan |= FIN;
-                else if (!ft_strcmp(argv[*idx], "XMAS"))
-                        e.scan |= XMAS;
-                else if (!ft_strcmp(argv[*idx], "UDP"))
-                        e.scan |= UDP;
-                else
+        for (i = 0; type[i]; i++) {
+        /* while (type[i] && i < 6) { */
+                found = false;
+                for (j = 0; j < 6; j++) {
+                        if (!ft_strcmp(type[i], str_type[j])) {
+                                e.scan |= enum_type[j];
+                                found = true;
+                        }
+                }
+                if (found == false) {
+                        free(type[i]);
+                        free(type);
                         return EXIT_FAILURE;
-                (*idx)++;
+                }
+                free(type[i]);
         }
+                /* if (!ft_strcmp(type[i], "SYN")) { */
+                /*         e.scan |= SYN; */
+                /* } else if (!ft_strcmp(type[i], "NULL")) { */
+                /*         e.scan |= NUL; */
+                /* } else if (!ft_strcmp(type[i], "ACK")) { */
+                /*         e.scan |= ACK; */
+                /* } else if (!ft_strcmp(type[i], "FIN")) { */
+                /*         e.scan |= FIN; */
+                /* } else if (!ft_strcmp(type[i], "XMAS")) { */
+                /*         e.scan |= XMAS; */
+                /* } else if (!ft_strcmp(type[i], "UDP")) { */
+                /*         e.scan |= UDP; */
+                /* free(type[i]); */
+                /* i++; */
+        /* } */
+        free(type);
         return EXIT_SUCCESS;
 }
 
@@ -118,6 +144,8 @@ static int8_t get_scan_type(char **argv, int8_t *idx)
  */
 int8_t parse_arg(int argc, char **argv)
 {
+        uint8_t error = 0;
+
         if (check_duplicate_param(argv, argc))
                 perror_and_exit("You have to use --ip or --hostname or --file");
         for (int8_t i = 1; i < argc; ++i) {
@@ -141,15 +169,18 @@ int8_t parse_arg(int argc, char **argv)
                                 perror_and_exit("Speedup must be between 0 and 250");
                 } else if (!ft_strcmp("--scan", argv[i])) {
                         ++i;
-                        if (get_scan_type(argv, &i))
+                        if (get_scan_type(argv[i]))
+                                /* error++; */
                                 return EXIT_FAILURE;
-                        --i;
+                        /* --i; */
                 /* else if (ft_strcmp("--os", argv[i])) */
                 /*         ;// call Function */
                 } else {
                         help_menu(EXIT_FAILURE);
                 }
         }
+        if (error)
+                help_menu(EXIT_FAILURE);
         check_options();
         return EXIT_SUCCESS;
 }

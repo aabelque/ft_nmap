@@ -6,7 +6,7 @@
 /*   By: zizou </var/mail/zizou>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 01:02:51 by zizou             #+#    #+#             */
-/*   Updated: 2022/01/26 19:13:36 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 18:45:41 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ static char *create_filter(char *host, uint16_t port, uint8_t type)
 {
         char *filter;
 
+        pthread_mutex_lock(e.mutex);
         if ((filter = ft_memalloc(sizeof(*filter) * 256)) == NULL)
                 return NULL;
         if (type == UDP)
@@ -37,6 +38,7 @@ static char *create_filter(char *host, uint16_t port, uint8_t type)
                         " || " \
                         "(icmp and src host %s and dst host %s)", \
                         host, e.my_ip, host, e.my_ip);
+        pthread_mutex_unlock(e.mutex);
         return filter;
 }
 
@@ -56,6 +58,7 @@ int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
         char s[ERRBUF];
         struct bpf_program fp;
 
+        printf("start of compile_and_set_filter()\n");
         if ((filter = create_filter(tgt->ip, port, type)) == NULL)
                 goto return_failure;
         if ((pcap_compile(handle, &fp, filter, 0, mask)) == -1)

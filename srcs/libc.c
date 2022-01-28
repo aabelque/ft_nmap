@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:57:59 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/17 02:30:38 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/01/27 18:16:31 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ inline int8_t strisdigit(const char *s)
 {
         if (!s || !ft_strlen(s))
                 return 0;
-        while (*s != '\0')
+        while (*s != '\0' && *s != '.')
                 if (!ft_isdigit(*s++))
                         return 0;
         return 1;

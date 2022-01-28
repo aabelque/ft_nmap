@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/26 16:17:20 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 18:50:34 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,16 +112,18 @@ int8_t is_loopback(char *ip, struct ifaddrs *ifa)
 {
         if ((ft_strcmp(ip, "127.0.0.1") == 0) \
                         && (ifa->ifa_flags & IFF_LOOPBACK) \
-                        && ifa->ifa_addr->sa_family == AF_INET)
+                        && ifa->ifa_addr->sa_family == AF_INET) {
                 return 1;
+        }
         return 0;
 }
 
 int8_t is_eth_interface(struct ifaddrs *ifa)
 {
         if ((ifa->ifa_flags & (IFF_RUNNING|IFF_UP|IFF_LOOPBACK)) == (IFF_RUNNING|IFF_UP) \
-                        && ifa->ifa_addr->sa_family == AF_INET)
+                        && ifa->ifa_addr->sa_family == AF_INET) {
                 return 1;
+        }
         return 0;
 }
 
@@ -129,12 +131,14 @@ int8_t get_interface_name(t_target *tgt, struct ifaddrs *ifa, char **device)
 {
         struct sockaddr_in *sa;
 
-        if ((*device = ft_memalloc(ft_strlen(ifa->ifa_name) + 1)) == NULL)
+        if ((*device = ft_memalloc(ft_strlen(ifa->ifa_name) + 1)) == NULL) {
                 return EXIT_FAILURE;
+        }
         ft_strcpy(*device, ifa->ifa_name);
         sa = (struct sockaddr_in *)ifa->ifa_addr;
-        if ((tgt->src = ft_memalloc(sizeof(*tgt->src))) == NULL)
+        if ((tgt->src = ft_memalloc(sizeof(*tgt->src))) == NULL) {
                 return EXIT_FAILURE;
+        }
         ft_memcpy(tgt->src, sa, sizeof(*sa));
         ft_strcpy(e.my_ip, inet_ntoa(tgt->src->sin_addr));
         return EXIT_SUCCESS;
@@ -160,10 +164,11 @@ int8_t capture_setup(t_target *tgt, uint16_t port, uint8_t type)
 
         if (get_device_ip_and_mask(tgt, &device, &ip, &mask))
                 goto return_failure;
-
+        pthread_mutex_lock(e.mutex);
         if ((e.handle = pcap_open_live(device, BUFSIZ, 0, to_ms, error)) == NULL)
                 goto pcap_open_failure;
-
+        pthread_mutex_unlock(e.mutex);
+        printf("before compile_and_set_filter()\n");
         if (compile_and_set_filter(tgt, e.handle, ip, port, type))
                 goto return_failure;
         free(device);
@@ -176,6 +181,7 @@ pcap_open_failure:
         sprintf(s, "Could not open %s - %s\n", device, error);
         fprintf(stderr, "%s", s);
         free(device);
+        pthread_mutex_unlock(e.mutex);
         return EXIT_FAILURE;
 }
 

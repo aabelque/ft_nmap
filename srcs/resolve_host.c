@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/29 23:08:06 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/19 23:13:07 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 18:43:47 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ static int8_t resolve_host(t_target *target, bool many)
         hints.ai_flags = AI_ADDRCONFIG | AI_V4MAPPED;
         hints.ai_family = AF_INET;
         hints.ai_socktype = 0;
-	hints.ai_protocol = IPPROTO_RAW;
+        hints.ai_protocol = IPPROTO_RAW;
         hints.ai_addrlen = 0;
         hints.ai_addr = NULL;
         hints.ai_canonname = NULL;
@@ -111,6 +111,7 @@ int8_t get_my_interface(t_target *tgt, char **device)
         return EXIT_SUCCESS;
 
 return_failure:
+        pthread_mutex_unlock(e.mutex);
         freeifaddrs(ifaddr);
         return EXIT_FAILURE;
 }

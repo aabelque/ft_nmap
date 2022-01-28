@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/26 16:57:08 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 17:18:48 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,12 @@ enum e_state_type {
         S_CF = 0x20
         
 };
+
+/* thread info struct */
+typedef struct s_ports_per_thread {
+        uint16_t        ports_per_thread;
+        uint16_t        remaining_ports;
+} t_ports_per_thread;
 
 /* tcp pseudo header */
 typedef struct s_psdohdr {
@@ -150,6 +156,8 @@ typedef struct  s_env {
         struct timeval          tv;
         struct sigaction        sigint;
         pcap_t                  *handle;
+	pthread_t               *thr_id;
+        pthread_mutex_t         *mutex;
         t_target                *target;
 }               t_env;
 
@@ -177,7 +185,7 @@ void print_udp_result(uint8_t state);
 int8_t parse_arg(int argc, char **argv);
 int8_t get_my_interface(t_target *tgt, char **device);
 int8_t set_and_resolve_hosts(void);
-int8_t process_scan(t_target *tgt);
+int8_t process_scan(t_target *tgt, uint16_t *ports);
 int8_t send_packet(t_target *tgt, uint16_t port, uint8_t type);
 int8_t get_udp_response(struct udphdr *udp, t_pkt_data *pkt);
 int8_t get_tcp_response(struct tcphdr *tcp, t_pkt_data *pkt);
@@ -217,7 +225,6 @@ void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr addr, \
                 struct in_addr src, uint16_t port, int8_t hlen, uint8_t type);
 int8_t capture_setup(t_target *tgt, uint16_t port, uint8_t type);
 uint16_t number_of_ports(void);
-/* uint16_t checksum_tcp(struct tcphdr *htcp, struct in_addr dst, struct in_addr src); */
 uint16_t checksum_tcp(struct tcphdr *p, struct in_addr dst, struct in_addr src);
 
 /* libc functions */
@@ -246,5 +253,8 @@ void update_node(t_result *list, uint8_t type, uint8_t state, uint16_t port);
 bool is_node_exist(t_result *list, uint16_t port);
 t_result *find_lastnode(t_result *list);
 t_result *new_node(uint8_t state, uint8_t type, uint16_t port, char *service);
+
+/* ft_nmap thread functions */
+int8_t create_thread(void *target);
 
 #endif

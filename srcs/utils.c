@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/25 17:36:30 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 18:38:37 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,15 +84,18 @@ int8_t get_device_ip_and_mask(t_target *tgt, char **device, bpf_u_int32 *ip, bpf
 {
         char error[ERRBUF];
 
+        /* pthread_mutex_lock(e.mutex); */
         ft_memset(error, '\0', sizeof(error));
         if (get_my_interface(tgt, device))
                 goto return_failure;
         if (pcap_lookupnet(*device, ip, mask, error) == -1)
                 goto return_failure;
+        pthread_mutex_unlock(e.mutex);
         return EXIT_SUCCESS;
 
 return_failure:
         fprintf(stderr, "%s", error);
+        /* pthread_mutex_unlock(e.mutex); */
         return EXIT_FAILURE;
 }
 

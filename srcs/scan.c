@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/26 23:25:35 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/28 18:38:13 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
         struct tcphdr *tcp;
         struct udphdr *udp;
 
+        pthread_mutex_lock(e.mutex);
         pkt_data = (t_pkt_data *)arg;
         data += OFFSET;
         ip = (struct ip *)data;
@@ -67,8 +68,9 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
                 break;
         default:
                 fprintf(stderr, "Protocol not supported: %u\n", ip->ip_p);
-                break ;
+                break;
         }
+        pthread_mutex_unlock(e.mutex);
 
 }
 
@@ -118,17 +120,17 @@ return_failure:
  * @target: struct t_target that contain target(s) info
  * @return 0 for success or 1 for failure
  */
-int8_t process_scan(t_target *target)
+int8_t process_scan(t_target *target, uint16_t *ports)
 {
         uint8_t end_type = 64;
         struct timeval start, end;
 
         if (gettimeofday(&start, NULL))
                 return EXIT_FAILURE;
-        for (int16_t i = 0; e.ports[i]; i++) {
+        for (int16_t i = 0; ports[i]; i++) {
                 for (int8_t type = 1; type < end_type; type <<= 1) {
                        if (e.scan & type)
-                               if (scan(target, type, e.ports[i]))
+                               if (scan(target, type, ports[i]))
                                        return EXIT_FAILURE;
                 }
         }
