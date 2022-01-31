@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:38:13 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/31 11:45:47 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
         struct tcphdr *tcp;
         struct udphdr *udp;
 
-        pthread_mutex_lock(e.mutex);
+        printf("in callback()\n");
         pkt_data = (t_pkt_data *)arg;
         data += OFFSET;
         ip = (struct ip *)data;
@@ -70,8 +70,6 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
                 fprintf(stderr, "Protocol not supported: %u\n", ip->ip_p);
                 break;
         }
-        pthread_mutex_unlock(e.mutex);
-
 }
 
 /**
@@ -87,17 +85,22 @@ static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
         int16_t wait = 500;
         int64_t time = 0.0;
         struct timeval t1, t2;
+        struct pollfd fd;
         t_pkt_data data;
+        pcap_t *handle;
         
+        /* pthread_mutex_lock(&e.mutex); */
         data = (t_pkt_data){type, port, tgt};
-        if (capture_setup(tgt, port, type))
+        if (capture_setup(&handle, tgt, port, type))
                 goto return_failure;
         if (send_packet(tgt, port, type))
                 goto return_failure;
+        fd = (struct pollfd){ tgt->socket, POLLIN, 0 };
         cnt = ft_strcmp(tgt->ip, "127.0.0.1") ? 1 : 2;
         gettimeofday(&t1, NULL);
         do {
-                cc = pcap_dispatch(e.handle, cnt, callback, (u_char *)&data);
+                if (poll(&fd, 1, wait))
+                        cc = pcap_dispatch(handle, cnt, callback, (u_char *)&data);
                 gettimeofday(&t2, NULL);
                 time += gettimeval(t1, t2);
         } while (time < wait && cc == 0);
@@ -105,13 +108,15 @@ static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
                 goto return_failure;
         if (cc == 0 || cc == -2)
                 no_packet(&data);
-        free(tgt->src);
-        pcap_close(e.handle);
+        /* free(tgt->src); */
+        pcap_close(handle);
+        /* pthread_mutex_unlock(&e.mutex); */
         return EXIT_SUCCESS;
 
 return_failure:
-        free(tgt->src);
-        pcap_close(e.handle);
+        /* free(tgt->src); */
+        pcap_close(handle);
+        /* pthread_mutex_unlock(&e.mutex); */
         return EXIT_FAILURE;
 }
 
@@ -129,7 +134,7 @@ int8_t process_scan(t_target *target, uint16_t *ports)
                 return EXIT_FAILURE;
         for (int16_t i = 0; ports[i]; i++) {
                 for (int8_t type = 1; type < end_type; type <<= 1) {
-                       if (e.scan & type)
+                       if (target->scan & type)
                                if (scan(target, type, ports[i]))
                                        return EXIT_FAILURE;
                 }

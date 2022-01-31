@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/29 23:08:06 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:43:47 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/30 17:29:46 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,7 @@ int8_t get_my_interface(t_target *tgt, char **device)
         if (getifaddrs(&ifaddr) == -1)
                 return EXIT_FAILURE;
         for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+                /* pthread_mutex_lock(e.mutex); */
                 if (is_loopback(tgt->ip, ifa)) {
                         if (get_interface_name(tgt, ifa, device))
                                 goto return_failure;
@@ -106,12 +107,12 @@ int8_t get_my_interface(t_target *tgt, char **device)
                                 goto return_failure;
                         break;
                 }
+                /* pthread_mutex_unlock(e.mutex); */
         }
         freeifaddrs(ifaddr);
         return EXIT_SUCCESS;
 
 return_failure:
-        pthread_mutex_unlock(e.mutex);
         freeifaddrs(ifaddr);
         return EXIT_FAILURE;
 }

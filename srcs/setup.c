@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:50:34 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/31 11:35:54 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,24 @@
 
 extern t_env e;
 
+void target_setup(void)
+{
+        e.target->pid = e.pid;
+        e.target->seq = e.seq;
+        e.target->dim = e.dim;
+        e.target->scan = e.scan;
+        e.target->socket = 0;
+        ft_memset(e.target->ports, 0, sizeof(e.target->ports));
+}
+
 /**
  * environment_setup - initialize the environment structure
  */
 void environment_setup(void)
 {
+        /* pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER; */
+        /* e.mutex = &m; */
+        pthread_mutex_init(&e.mutex, NULL);
         e.resolve_dns = true;
         e.many_target = false;
         e.pid = (getpid() & 0xffff);
@@ -131,16 +144,16 @@ int8_t get_interface_name(t_target *tgt, struct ifaddrs *ifa, char **device)
 {
         struct sockaddr_in *sa;
 
-        if ((*device = ft_memalloc(ft_strlen(ifa->ifa_name) + 1)) == NULL) {
+        /* pthread_mutex_lock(e.mutex); */
+        if ((*device = ft_memalloc(ft_strlen(ifa->ifa_name) + 1)) == NULL)
                 return EXIT_FAILURE;
-        }
         ft_strcpy(*device, ifa->ifa_name);
         sa = (struct sockaddr_in *)ifa->ifa_addr;
-        if ((tgt->src = ft_memalloc(sizeof(*tgt->src))) == NULL) {
+        if ((tgt->src = ft_memalloc(sizeof(*tgt->src))) == NULL)
                 return EXIT_FAILURE;
-        }
         ft_memcpy(tgt->src, sa, sizeof(*sa));
-        ft_strcpy(e.my_ip, inet_ntoa(tgt->src->sin_addr));
+        ft_strcpy(tgt->my_ip, inet_ntoa(tgt->src->sin_addr));
+        /* pthread_mutex_unlock(e.mutex); */
         return EXIT_SUCCESS;
 }
 
@@ -152,25 +165,31 @@ int8_t get_interface_name(t_target *tgt, struct ifaddrs *ifa, char **device)
  * @type: type of scan
  * @return 0 on success or 1 on failure
  */
-int8_t capture_setup(t_target *tgt, uint16_t port, uint8_t type)
+int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type)
 {
         int8_t to_ms = 25;
         char *device = NULL;
         char error[ERRBUF], s[ERRBUF];
         bpf_u_int32 ip, mask;
 
+        /* printf("in capture_setup()\n"); */
         ft_memset(error, '\0', sizeof(error));
         ft_memset(s, '\0', sizeof(s));
 
+        /* pthread_mutex_lock(&e.mutex); */
+        /* printf("before get_device_ip_and_mask()\n"); */
         if (get_device_ip_and_mask(tgt, &device, &ip, &mask))
                 goto return_failure;
-        pthread_mutex_lock(e.mutex);
-        if ((e.handle = pcap_open_live(device, BUFSIZ, 0, to_ms, error)) == NULL)
+        /* printf("after get_device_ip_and_mask()\n"); */
+        /* printf("before pcap_open_live()\n"); */
+        if ((*handle = pcap_open_live(device, BUFSIZ, 0, to_ms, error)) == NULL)
                 goto pcap_open_failure;
-        pthread_mutex_unlock(e.mutex);
-        printf("before compile_and_set_filter()\n");
-        if (compile_and_set_filter(tgt, e.handle, ip, port, type))
+        /* printf("after pcap_open_live()\n"); */
+        /* printf("before compile_and_set_filter()\n"); */
+        if (compile_and_set_filter(tgt, handle, ip, port, type))
                 goto return_failure;
+        /* printf("after compile_and_set_filter()\n"); */
+        /* pthread_mutex_unlock(&e.mutex); */
         free(device);
         return EXIT_SUCCESS;
 
@@ -181,7 +200,6 @@ pcap_open_failure:
         sprintf(s, "Could not open %s - %s\n", device, error);
         fprintf(stderr, "%s", s);
         free(device);
-        pthread_mutex_unlock(e.mutex);
         return EXIT_FAILURE;
 }
 
@@ -206,27 +224,28 @@ uint16_t checksum_tcp(struct tcphdr *p, struct in_addr dst, struct in_addr src)
  * @hlen: size of the packet structure
  * @type: type of scan
  */
-void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr dst, \
-                struct in_addr src, uint16_t port, int8_t hlen, uint8_t type)
+void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
+                uint16_t port, int8_t hlen, uint8_t type)
 {
-        ft_memset(pkt, 0, sizeof(*pkt));
 
+        /* pthread_mutex_lock(e.mutex); */
+        ft_memset(pkt, 0, sizeof(*pkt));
 	(pkt->ip).ip_off = 0;
 	(pkt->ip).ip_hl = sizeof(pkt->ip) >> 2;
 	(pkt->ip).ip_p = IPPROTO_TCP;
 	(pkt->ip).ip_len = hlen;
 	(pkt->ip).ip_ttl = 64;
 	(pkt->ip).ip_v = IPVERSION;
-	(pkt->ip).ip_id = htons(e.pid);
+	(pkt->ip).ip_id = htons(tgt->pid);
         (pkt->ip).ip_tos = 0;
-	(pkt->ip).ip_dst = dst;
-	(pkt->ip).ip_src = src;
+	(pkt->ip).ip_dst = tgt->to->sin_addr;
+	(pkt->ip).ip_src = tgt->src->sin_addr;
         (pkt->ip).ip_sum = 0;
         (pkt->ip).ip_sum = checksum(&pkt->ip, sizeof(pkt->ip));
         
-        (pkt->tcp).source = htons(e.pid);
+        (pkt->tcp).source = htons(tgt->pid);
         (pkt->tcp).dest = htons(port);
-        (pkt->tcp).seq = htons(e.seq);
+        (pkt->tcp).seq = htons(tgt->seq);
         (pkt->tcp).ack_seq = 0;
         (pkt->tcp).doff = sizeof(struct tcphdr) >> 2;
         (pkt->tcp).fin = (type & FIN || type & XMAS) ? 1 : 0;
@@ -238,6 +257,7 @@ void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr dst, \
         (pkt->tcp).window = htons(UINT16_MAX);
         (pkt->tcp).urg_ptr = 0;
         (pkt->tcp).th_sum = 0;
+        /* pthread_mutex_unlock(e.mutex); */
 }
 
 /**
@@ -274,10 +294,10 @@ void signal_setup(void)
         int8_t cc;
         struct sigaction sig_alarm;
 
-        sigemptyset(&sig_alarm.sa_mask);
         ft_memset(&sig_alarm, 0, sizeof(sig_alarm));
-        sig_alarm.sa_handler = &break_signal;
-        sig_alarm.sa_flags = 0;
+        sigemptyset(&sig_alarm.sa_mask);
+        sig_alarm.sa_flags = SA_SIGINFO;
+        sig_alarm.sa_sigaction = &break_signal;
         cc = ft_strcmp(e.target->ip, "127.0.0.1") ? 1 : 3;
         alarm(cc);
         sigaction(SIGALRM, &sig_alarm, NULL);

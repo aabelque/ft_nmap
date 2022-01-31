@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 17:18:48 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/31 11:35:01 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@
 #include <pthread.h>
 #include <pcap/pcap.h>
 #include <ifaddrs.h>
+#include <poll.h>
 
 /* Utils define */
 #define GIT "https://github.com/aabelque/ft_nmap.git"
@@ -117,9 +118,16 @@ typedef struct  s_result {
 
 /* Target host structure */
 typedef struct  s_target {
+        uint8_t                 scan;
+        int16_t                 socket;
+        uint16_t                pid;
+        uint16_t                seq;
+        uint16_t                dim;
+        uint16_t                ports[1025];
         char                    *hname;
         char                    *rdns;
         char                    ip[INET_ADDRSTRLEN];
+        char                    my_ip[INET_ADDRSTRLEN];
         struct sockaddr_in      *to;
         struct sockaddr_in      *src;
         t_result                *report;
@@ -156,8 +164,8 @@ typedef struct  s_env {
         struct timeval          tv;
         struct sigaction        sigint;
         pcap_t                  *handle;
+        pthread_mutex_t         mutex;
 	pthread_t               *thr_id;
-        pthread_mutex_t         *mutex;
         t_target                *target;
 }               t_env;
 
@@ -197,7 +205,8 @@ char *get_service(uint16_t port, const char *proto);
 void help_menu(int8_t status);
 void check_options(void);
 void ip_dot(char *ip);
-void break_signal(int sig);
+/* void break_signal(int sig, pthread_t pid, int ok); */
+void break_signal(int sig, siginfo_t *info, void *pid);
 void interrupt_signal(int sig);
 void calculate_scan_time(struct timeval start, struct timeval end);
 int8_t is_loopback(char *ip, struct ifaddrs *ifa);
@@ -209,21 +218,22 @@ int8_t get_nbip_and_alloc(char *ip);
 int8_t copy_ips(char *ip);
 int8_t get_my_ip_and_mask(bpf_u_int32 ip, bpf_u_int32 mask);
 int8_t get_device_ip_and_mask(t_target *tgt, char **device, bpf_u_int32 *ip, bpf_u_int32 *mask);
-int8_t compile_and_set_filter(t_target *tgt, pcap_t *handle, bpf_u_int32 mask, \
+int8_t compile_and_set_filter(t_target *tgt, pcap_t **handle, bpf_u_int32 mask, \
                 uint16_t port, uint8_t type);
 uint16_t checksum(void *addr, int len);
 double gettimeval(struct timeval before, struct timeval after);
 char *get_ip_from_file(char *file);
 
 /* setup functions */
+void target_setup(void);
 void environment_setup(void);
 void environment_cleanup(void);
 void signal_setup(void);
 void udp_packet_setup(struct udp_packet *pkt, struct in_addr addr, \
                 struct in_addr src, uint16_t port, int8_t hlen);
-void tcp_packet_setup(struct tcp_packet *pkt, struct in_addr addr, \
-                struct in_addr src, uint16_t port, int8_t hlen, uint8_t type);
-int8_t capture_setup(t_target *tgt, uint16_t port, uint8_t type);
+void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
+                uint16_t port, int8_t hlen, uint8_t type);
+int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type);
 uint16_t number_of_ports(void);
 uint16_t checksum_tcp(struct tcphdr *p, struct in_addr dst, struct in_addr src);
 

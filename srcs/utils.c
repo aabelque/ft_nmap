@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:38:37 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/31 14:25:56 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,9 @@ void calculate_scan_time(struct timeval start, struct timeval end)
 
         ts = (double)start.tv_sec + (double)start.tv_usec / 1000000;
         te = (double)end.tv_sec + (double)end.tv_usec / 1000000;
+        /* pthread_mutex_lock(&e.mutex); */
         e.time += te - ts;
+        /* pthread_mutex_unlock(&e.mutex); */
 }
 
 uint16_t checksum(void *addr, int len)
@@ -84,13 +86,13 @@ int8_t get_device_ip_and_mask(t_target *tgt, char **device, bpf_u_int32 *ip, bpf
 {
         char error[ERRBUF];
 
-        /* pthread_mutex_lock(e.mutex); */
         ft_memset(error, '\0', sizeof(error));
+        /* pthread_mutex_lock(e.mutex); */
         if (get_my_interface(tgt, device))
                 goto return_failure;
         if (pcap_lookupnet(*device, ip, mask, error) == -1)
                 goto return_failure;
-        pthread_mutex_unlock(e.mutex);
+        /* pthread_mutex_unlock(e.mutex); */
         return EXIT_SUCCESS;
 
 return_failure:
@@ -103,7 +105,7 @@ return_failure:
  * break_signal - when SIGALRM signal received, breaks pcap_dispatch function
  * @sig: SIGALRM signal
  */
-inline void break_signal(__attribute__((unused))int sig)
+void break_signal(__attribute__((unused))int sig, siginfo_t *info, void *pid)
 {
         int8_t cc;
 

@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:34:36 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/31 14:47:41 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,26 +25,38 @@ extern t_env e;
  * @target      struct t_target that contain target(s)
  *
  */
-void *nmap_scan(void *ports)
+void *nmap_scan(void *data)
 {
         uint16_t i = -1;
-        uint16_t *p = (uint16_t *)ports;
-        t_target *tgt = (t_target *)e.target;
+        /* uint16_t *p = (uint16_t *)ports; */
+        t_target *tgt = (t_target *)data;
 
-        if (e.dim) {
-                while (++i < e.dim) {
+        printf("pthread_self() = %ld\n", pthread_self());
+        /* pthread_mutex_lock(&e.mutex); */
+        /* fprintf(stdout, "tgt->ip = %s\n", tgt->ip); */
+        /* for (int i = 0; tgt->ports[i]; i++) { */
+        /*         fprintf(stdout, "tgt->ports[i] = %d\n", tgt->ports[i]); */
+        /*         fflush(stdout); */
+        /* } */
+        /* pthread_mutex_unlock(&e.mutex); */
+        /* signal_setup(); */ 
+        /* pthread_mutex_lock(&e.mutex); */
+        if (tgt->dim) {
+                while (++i < tgt->dim) {
                         print_header(tgt[i].hname, tgt[i].ip, tgt[i].rdns);
-                        if (process_scan(&tgt[i], p))
+                        if (process_scan(&tgt[i], tgt->ports))
                                 return NULL;
                         print_result(tgt[i].report);
                         write(1, "\n", 1);
                 }
         } else {
-                if (process_scan(tgt, p))
+                /* print_header(tgt->hname, tgt->ip, tgt->rdns); */
+                if (process_scan(tgt, tgt->ports))
                         return NULL;
-                print_result(tgt->report);
         }
-        return NULL;
+        /* pthread_mutex_unlock(&e.mutex); */
+        /* usleep(10); */
+        pthread_exit(NULL);
 }
 
 /**
@@ -54,15 +66,19 @@ void ft_nmap(void)
 {
         void *ports;
 
+        /*! TODO: implement loop here instead of in nmap_scan() */
+        /*! TODO: print header here */
+        /*! TODO: lock and unlock mutex with shared variable */
+
         /* target = (void *)e.target; */
-        pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-        e.mutex = &mutex;
         print_header(e.target->hname, e.target->ip, e.target->rdns);
         if (!e.nb_thread)
                 nmap_scan(e.ports);
         else
                 if (create_thread(ports))
                         return ;
+        /* print_result(e.target->report); */
+        /*! TODO: print results here */
 }
 
 int main(int argc, char **argv)
@@ -77,9 +93,12 @@ int main(int argc, char **argv)
         gettimeofday(&e.tv, NULL);
         if (set_and_resolve_hosts())
                 exit_errors(ERR_HOSTNAME, e.hostname);
-        signal_setup();
+        /* signal_setup(); */
+        target_setup();
         print_first_line();
         ft_nmap();
+        /* sleep(1); */
+        print_result(e.target->report);
         print_last_line();
         environment_cleanup();
         return EXIT_SUCCESS;

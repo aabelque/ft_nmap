@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 19:26:13 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:29:53 by zizou            ###   ########.fr       */
+/*   Updated: 2022/01/31 14:27:25 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,26 +27,31 @@ static int16_t send_tcp_packet(t_target *tgt, uint16_t port, int8_t hlen, uint8_
         struct sockaddr_in addr;
         struct in_addr dst, src;
 
-        pthread_mutex_lock(e.mutex);
+        /* pthread_mutex_lock(e.mutex); */
         dst = tgt->to->sin_addr;
         if (tgt->src)
                 src = tgt->src->sin_addr;
+        /* pthread_mutex_unlock(&e.mutex); */
 
 	ft_memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr = dst;
 	addr.sin_port = htons(port);
 
-        tcp_packet_setup(&packet, dst, src, port, hlen, type);
+        /* printf("in send_tcp_packet()\n"); */
+        tcp_packet_setup(&packet, tgt, port, hlen, type);
         packet.tcp.th_sum = checksum_tcp(&packet.tcp, dst, src);
 
-        if ((e.tcp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+        /* pthread_mutex_lock(&e.mutex); */
+        if ((tgt->socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
                 return EXIT_FAILURE;
-        if (setsockopt(e.tcp_socket, IPPROTO_IP, IP_HDRINCL, &opt, sizeof(opt)))
+        if (setsockopt(tgt->socket, IPPROTO_IP, IP_HDRINCL, &opt, sizeof(opt)))
                 return EXIT_FAILURE;
-        cc = sendto(e.tcp_socket, (char *)&packet, hlen, \
+        cc = sendto(tgt->socket, (char *)&packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
-        pthread_mutex_unlock(e.mutex);
+        if (cc < 0)
+                perror("Sendto: ");
+        /* pthread_mutex_unlock(&e.mutex); */
         return cc;
 }
 
@@ -64,7 +69,6 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
         struct sockaddr_in addr;
         struct in_addr dst, src;
 
-        pthread_mutex_lock(e.mutex);
 	ft_memset(&addr, 0, sizeof(addr));
 	ft_memset(&dst, 0, sizeof(dst));
 	ft_memset(&src, 0, sizeof(src));
@@ -80,7 +84,6 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
                 return EXIT_FAILURE;
         cc = sendto(e.udp_socket, &packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
-        pthread_mutex_lock(e.mutex);
         return cc;
 }
 
@@ -96,23 +99,20 @@ int8_t send_packet(t_target *tgt, uint16_t port, uint8_t type)
         int8_t hlen = 0;
         int16_t cc = 0;
 
-        pthread_mutex_lock(e.mutex);
         if (type & UDP) {
                 hlen = sizeof(struct udp_packet);
                 cc = send_udp_packet(tgt, port, hlen);
-                close(e.udp_socket);
+                /* close(e.udp_socket); */
         } else {
                 hlen = sizeof(struct tcp_packet);
                 cc = send_tcp_packet(tgt, port, hlen, type);
-                close(e.tcp_socket);
+                /* close(e.tcp_socket); */
         }
         if (cc < 0 || cc != hlen)
                 goto return_failure;
-        pthread_mutex_unlock(e.mutex);
         return EXIT_SUCCESS;
 
 return_failure:
         fprintf(stderr, "Error sendto, the number of bytes sent is %d\n", cc);
-        pthread_mutex_unlock(e.mutex);
         return EXIT_FAILURE;
 }
