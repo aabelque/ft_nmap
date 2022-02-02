@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/31 14:25:56 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/02 14:15:30 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ void calculate_scan_time(struct timeval start, struct timeval end)
         ts = (double)start.tv_sec + (double)start.tv_usec / 1000000;
         te = (double)end.tv_sec + (double)end.tv_usec / 1000000;
         /* pthread_mutex_lock(&e.mutex); */
-        e.time += te - ts;
+        e.time = te - ts;
         /* pthread_mutex_unlock(&e.mutex); */
 }
 
@@ -109,7 +109,10 @@ void break_signal(__attribute__((unused))int sig, siginfo_t *info, void *pid)
 {
         int8_t cc;
 
-        pcap_breakloop(e.handle);
+        printf("ici\n");
+        printf("e.thr_id[0] = %ld\n", e.thr_id[0]);
+        pthread_kill(e.thr_id[0], SIGALRM);
+        /* pcap_breakloop(e.handle); */
         cc = ft_strcmp(e.target->ip, "127.0.0.1") ? 1 : 3;
         alarm(cc);
 }

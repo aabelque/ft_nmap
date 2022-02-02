@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/31 14:47:41 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/02 17:55:13 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,38 @@
 
 extern t_env e;
 
+static t_target *init_data(void *data)
+{
+        t_target *target = NULL;
+
+        /* pthread_mutex_lock(&e.mutex); */
+        target = ft_memalloc(sizeof(t_target));
+        if (target == NULL)
+                return NULL;
+        target->dim = e.dim;
+        target->hname = e.target->hname;
+        /* target->ip = e.target->ip; */
+        /* target->my_ip = e.target->my_ip; */
+        /* target->ports = data; */
+        ft_memcpy(target->ip, e.target->ip, sizeof(target->ip));
+        ft_memcpy(target->my_ip, e.target->my_ip, sizeof(target->my_ip));
+        ft_memcpy(target->ports, e.target->ports, sizeof(target->ports));
+        fflush(stdout);
+        printf("target->ports[0] = %d\n", target->ports[0]);
+        printf("target->ports[1] = %d\n", target->ports[1]);
+        fflush(stdout);
+        target->pid = e.target->pid;
+        target->rdns = e.target->rdns;
+        target->report = e.target->report;
+        target->scan = e.target->scan;
+        target->seq = e.target->seq;
+        target->socket = e.target->socket;
+        target->src = e.target->src;
+        target->to = e.target->to;
+        /* pthread_mutex_unlock(&e.mutex); */
+        return target;
+}
+
 /**
  * nmap_scan -  Check if there is many target
  *              and call process_scan() many time or one time
@@ -28,16 +60,15 @@ extern t_env e;
 void *nmap_scan(void *data)
 {
         uint16_t i = -1;
-        /* uint16_t *p = (uint16_t *)ports; */
         t_target *tgt = (t_target *)data;
+
+        /* pthread_mutex_lock(&e.mutex); */
+        /* tgt = init_data(data); */
+        /* pthread_mutex_unlock(&e.mutex); */
 
         printf("pthread_self() = %ld\n", pthread_self());
         /* pthread_mutex_lock(&e.mutex); */
         /* fprintf(stdout, "tgt->ip = %s\n", tgt->ip); */
-        /* for (int i = 0; tgt->ports[i]; i++) { */
-        /*         fprintf(stdout, "tgt->ports[i] = %d\n", tgt->ports[i]); */
-        /*         fflush(stdout); */
-        /* } */
         /* pthread_mutex_unlock(&e.mutex); */
         /* signal_setup(); */ 
         /* pthread_mutex_lock(&e.mutex); */
@@ -56,7 +87,7 @@ void *nmap_scan(void *data)
         }
         /* pthread_mutex_unlock(&e.mutex); */
         /* usleep(10); */
-        pthread_exit(NULL);
+        pthread_exit(tgt->report);
 }
 
 /**
@@ -64,6 +95,7 @@ void *nmap_scan(void *data)
  */
 void ft_nmap(void)
 {
+        struct timeval start, end;
         void *ports;
 
         /*! TODO: implement loop here instead of in nmap_scan() */
@@ -72,11 +104,16 @@ void ft_nmap(void)
 
         /* target = (void *)e.target; */
         print_header(e.target->hname, e.target->ip, e.target->rdns);
+        if (gettimeofday(&start, NULL))
+                return ;
         if (!e.nb_thread)
                 nmap_scan(e.ports);
         else
                 if (create_thread(ports))
                         return ;
+        if (gettimeofday(&end, NULL))
+                return ;
+        calculate_scan_time(start, end);
         /* print_result(e.target->report); */
         /*! TODO: print results here */
 }
@@ -98,7 +135,7 @@ int main(int argc, char **argv)
         print_first_line();
         ft_nmap();
         /* sleep(1); */
-        print_result(e.target->report);
+        /* print_result(e.target->report); */
         print_last_line();
         environment_cleanup();
         return EXIT_SUCCESS;

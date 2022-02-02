@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 19:26:13 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/31 14:27:25 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/02 18:11:08 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,34 +25,21 @@ static int16_t send_tcp_packet(t_target *tgt, uint16_t port, int8_t hlen, uint8_
         int8_t opt = 1, cc = 0;
         struct tcp_packet packet;
         struct sockaddr_in addr;
-        struct in_addr dst, src;
-
-        /* pthread_mutex_lock(e.mutex); */
-        dst = tgt->to->sin_addr;
-        if (tgt->src)
-                src = tgt->src->sin_addr;
-        /* pthread_mutex_unlock(&e.mutex); */
 
 	ft_memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr = dst;
+	addr.sin_addr = tgt->to->sin_addr;
 	addr.sin_port = htons(port);
 
-        /* printf("in send_tcp_packet()\n"); */
         tcp_packet_setup(&packet, tgt, port, hlen, type);
-        packet.tcp.th_sum = checksum_tcp(&packet.tcp, dst, src);
+        packet.tcp.th_sum = checksum_tcp(&packet.tcp, tgt->to->sin_addr, tgt->src->sin_addr);
 
-        /* pthread_mutex_lock(&e.mutex); */
-        if ((tgt->socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+        if ((tgt->socket = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
                 return EXIT_FAILURE;
         if (setsockopt(tgt->socket, IPPROTO_IP, IP_HDRINCL, &opt, sizeof(opt)))
                 return EXIT_FAILURE;
-        cc = sendto(tgt->socket, (char *)&packet, hlen, \
+        return sendto(tgt->socket, (char *)&packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
-        if (cc < 0)
-                perror("Sendto: ");
-        /* pthread_mutex_unlock(&e.mutex); */
-        return cc;
 }
 
 /**
@@ -67,24 +54,17 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
         int8_t cc = 0;
         struct udp_packet packet;
         struct sockaddr_in addr;
-        struct in_addr dst, src;
 
 	ft_memset(&addr, 0, sizeof(addr));
-	ft_memset(&dst, 0, sizeof(dst));
-	ft_memset(&src, 0, sizeof(src));
 
-        dst = tgt->to->sin_addr;
-        if (tgt->src)
-                src = tgt->src->sin_addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr = tgt->to->sin_addr;
 	addr.sin_port = htons(port);
-        udp_packet_setup(&packet, tgt->to->sin_addr, src, port, hlen);
-        if ((e.udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+        udp_packet_setup(&packet, tgt, port, hlen);
+        if ((tgt->socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
                 return EXIT_FAILURE;
-        cc = sendto(e.udp_socket, &packet, hlen, \
+        return sendto(tgt->socket, &packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
-        return cc;
 }
 
 /**
@@ -102,11 +82,11 @@ int8_t send_packet(t_target *tgt, uint16_t port, uint8_t type)
         if (type & UDP) {
                 hlen = sizeof(struct udp_packet);
                 cc = send_udp_packet(tgt, port, hlen);
-                /* close(e.udp_socket); */
+                close(tgt->socket);
         } else {
                 hlen = sizeof(struct tcp_packet);
                 cc = send_tcp_packet(tgt, port, hlen, type);
-                /* close(e.tcp_socket); */
+                close(tgt->socket);
         }
         if (cc < 0 || cc != hlen)
                 goto return_failure;

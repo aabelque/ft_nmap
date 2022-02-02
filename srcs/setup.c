@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/31 11:35:54 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/02 18:09:02 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,7 +182,7 @@ int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type
                 goto return_failure;
         /* printf("after get_device_ip_and_mask()\n"); */
         /* printf("before pcap_open_live()\n"); */
-        if ((*handle = pcap_open_live(device, BUFSIZ, 0, to_ms, error)) == NULL)
+        if ((*handle = pcap_open_live(device, BUFSIZ, 0, 0, error)) == NULL)
                 goto pcap_open_failure;
         /* printf("after pcap_open_live()\n"); */
         /* printf("before compile_and_set_filter()\n"); */
@@ -195,11 +195,13 @@ int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type
 
 return_failure:
         free(device);
+        /* pthread_mutex_unlock(&e.mutex); */
         return EXIT_FAILURE;
 pcap_open_failure:
         sprintf(s, "Could not open %s - %s\n", device, error);
         fprintf(stderr, "%s", s);
         free(device);
+        /* pthread_mutex_unlock(&e.mutex); */
         return EXIT_FAILURE;
 }
 
@@ -268,8 +270,8 @@ void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
  * @port: port to scan
  * @hlen: size of the packet structure
  */
-void udp_packet_setup(struct udp_packet *pkt, struct in_addr dst, \
-                struct in_addr src, uint16_t port, int8_t hlen)
+void udp_packet_setup(struct udp_packet *pkt, t_target *tgt, \
+                uint16_t port, int8_t hlen)
 {
         ft_memset(pkt, 0, sizeof(*pkt));
 	(pkt->ip).ip_off = 0;
@@ -278,12 +280,12 @@ void udp_packet_setup(struct udp_packet *pkt, struct in_addr dst, \
 	(pkt->ip).ip_len = hlen;
 	(pkt->ip).ip_ttl = 64;
 	(pkt->ip).ip_v = IPVERSION;
-	(pkt->ip).ip_id = htons(e.pid + e.seq);
+	(pkt->ip).ip_id = htons(tgt->pid + tgt->seq);
 	(pkt->ip).ip_tos = 0;
-	(pkt->ip).ip_dst = dst;
-	(pkt->ip).ip_src = src;
+	(pkt->ip).ip_dst = tgt->to->sin_addr;
+	(pkt->ip).ip_src = tgt->src->sin_addr;
 
-        (pkt->udp).uh_sport = htons(e.pid);
+        (pkt->udp).uh_sport = htons(tgt->pid);
         (pkt->udp).uh_dport = htons(port);
         (pkt->udp).uh_ulen = htons((unsigned short)(hlen - sizeof(struct ip)));
         (pkt->udp).uh_sum = 0;

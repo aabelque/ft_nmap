@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/11 19:58:24 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/28 18:32:48 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/02 18:03:25 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ int8_t get_tcp_response(struct tcphdr *tcp, t_pkt_data *pkt)
                 &ack_decode, &fin_decode, &xmas_decode, &udp_decode};
         t_result *r = pkt->tgt->report;
         
+        /*! TODO: Refactor this to avoid multiple loop for_eachtype */
         if (pkt->port == ntohs(tcp->th_sport)) {
                 if (tcp->ack && tcp->syn) {
                         for_eachtype(i, type, start, end) {
@@ -42,6 +43,11 @@ int8_t get_tcp_response(struct tcphdr *tcp, t_pkt_data *pkt)
                                 if (type == pkt->type)
                                         func[i](pkt, 21, 0, is_node_exist(r, pkt->port));
                         }
+                }
+        } else {
+                for_eachtype(i, type, start, end) {
+                        if (type == pkt->type)
+                                func[i](pkt, 255, 0, is_node_exist(r, pkt->port));
                 }
         }
         return EXIT_SUCCESS;
@@ -57,9 +63,13 @@ int8_t get_tcp_response(struct tcphdr *tcp, t_pkt_data *pkt)
 int8_t get_icmp_response(const u_char *data, t_pkt_data *pkt)
 {
         int8_t hlen = 0;
-        uint8_t type, code;
+        uint8_t scan_type = 0, i = 0, start = 1,
+                end = 64, type, code;
         struct ip *ip;
         struct icmp *icmp;
+        struct tcphdr *tcp;
+        void (*func[6])(t_pkt_data *, uint8_t, uint8_t, bool) = {&syn_decode, &null_decode,
+                &ack_decode, &fin_decode, &xmas_decode, &udp_decode};
         t_result *r = pkt->tgt->report;
 
         ip = (struct ip *)data;
@@ -72,8 +82,13 @@ int8_t get_icmp_response(const u_char *data, t_pkt_data *pkt)
 
         if (type == ICMP_UNREACH) {
                 if (ip->ip_p == IPPROTO_TCP) {
-                        printf("icmp tcp\n");
-                        struct tcphdr *tcp = (struct tcphdr *)((char *)ip + hlen);
+                        tcp = (struct tcphdr *)((char *)ip + hlen);
+                        if (pkt->port == ntohs(tcp->th_sport)) {
+                                for_eachtype(i, scan_type, start, end) {
+                                        if (type == pkt->type)
+                                                func[i](pkt, 255, 0, is_node_exist(r, pkt->port));
+                                }
+                        }
                 } else if (ip->ip_p == IPPROTO_UDP) {
                         struct udphdr *udp = (struct udphdr *)((char *)ip + hlen);
                         if (ntohs(udp->uh_dport) == pkt->port && ntohs(udp->uh_sport) == e.pid)

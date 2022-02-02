@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/31 11:35:01 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/02 18:08:03 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ typedef struct  s_target {
         uint16_t                pid;
         uint16_t                seq;
         uint16_t                dim;
-        uint16_t                ports[1025];
+        uint16_t                ports[1026];
         char                    *hname;
         char                    *rdns;
         char                    ip[INET_ADDRSTRLEN];
@@ -163,7 +163,7 @@ typedef struct  s_env {
         char                    **multiple_ip;
         struct timeval          tv;
         struct sigaction        sigint;
-        pcap_t                  *handle;
+        pcap_t                  **handle;
         pthread_mutex_t         mutex;
 	pthread_t               *thr_id;
         t_target                *target;
@@ -229,8 +229,8 @@ void target_setup(void);
 void environment_setup(void);
 void environment_cleanup(void);
 void signal_setup(void);
-void udp_packet_setup(struct udp_packet *pkt, struct in_addr addr, \
-                struct in_addr src, uint16_t port, int8_t hlen);
+void udp_packet_setup(struct udp_packet *pkt, t_target *tgt, \
+                uint16_t port, int8_t hlen);
 void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
                 uint16_t port, int8_t hlen, uint8_t type);
 int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type);
