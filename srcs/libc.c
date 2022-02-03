@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:57:59 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/27 18:16:31 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 16:42:27 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,8 @@ inline size_t ft_strlen(const char *s)
 {
         const char *b = s;
 
+        if (!s)
+                return 0;
         while (*s)
                 s++;
         return s - b;

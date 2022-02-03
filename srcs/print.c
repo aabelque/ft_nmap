@@ -6,17 +6,18 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:06:51 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 16:56:15 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
-static void print_state(uint8_t state, int8_t *type, bool *first)
+static void print_state(uint8_t state, int8_t *type, bool *first, int8_t len)
 {
         int8_t space;
 
         space = ft_strlen((char *)type) == 4 ? 1 : 2;
+        space = len < 12 ? space : space - len;
         *first = *first == true ? false : printf("%17s", "");
         if (state & S_OP)
                 fprintf(stdout, "%s%*s- %s\n", type, space, "", "Open");
@@ -32,7 +33,7 @@ static void print_state(uint8_t state, int8_t *type, bool *first)
                 fprintf(stdout, "%s%*s- %s\n", type, space, "", "Closed|Filtered");
 }
 
-static void print_each_state(t_scan *scan, bool *first)
+static void print_each_state(t_scan *scan, bool *first, int8_t len)
 {
         uint8_t current_type = 0, i = 0, start = 1, end = 64;
         int8_t type[6][5] = {"syn\0", "null\0",
@@ -40,17 +41,19 @@ static void print_each_state(t_scan *scan, bool *first)
 
         for_eachtype(i, current_type, start, end) {
                 if (scan->type & current_type) {
-                        print_state(scan->state, type[i], first);
+                        print_state(scan->state, type[i], first, len);
                 }
         }
 }
 
 static void print_each_port(t_result *r, bool *first)
 {
+        int8_t len = ft_strlen(r->service);
+
         fprintf(stdout, "%*d", -5, r->port);
-        fprintf(stdout, "%*s", -12, r->service ? r->service : "Unassigned");
+        fprintf(stdout, "%*s", len > 12 ? len - 12: -12, r->service ? r->service : "Unassigned");
         for (t_scan *s = r->scan; s; s = s->next) {
-                print_each_state(s, first);
+                print_each_state(s, first, len);
                 *first = false;
         }
 }
