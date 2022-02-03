@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 14:01:41 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 16:21:38 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,9 +98,7 @@ static int8_t get_scan_type(char *argv)
         
         if ((type = ft_strsplit(argv, ',')) == NULL)
                 return EXIT_FAILURE;
-        /*! TODO: refactoring this with array of scan type to get rid of if else */
         for (i = 0; type[i]; i++) {
-        /* while (type[i] && i < 6) { */
                 found = false;
                 for (j = 0; j < 6; j++) {
                         if (!ft_strcmp(type[i], str_type[j])) {
@@ -115,21 +113,6 @@ static int8_t get_scan_type(char *argv)
                 }
                 free(type[i]);
         }
-                /* if (!ft_strcmp(type[i], "SYN")) { */
-                /*         e.scan |= SYN; */
-                /* } else if (!ft_strcmp(type[i], "NULL")) { */
-                /*         e.scan |= NUL; */
-                /* } else if (!ft_strcmp(type[i], "ACK")) { */
-                /*         e.scan |= ACK; */
-                /* } else if (!ft_strcmp(type[i], "FIN")) { */
-                /*         e.scan |= FIN; */
-                /* } else if (!ft_strcmp(type[i], "XMAS")) { */
-                /*         e.scan |= XMAS; */
-                /* } else if (!ft_strcmp(type[i], "UDP")) { */
-                /*         e.scan |= UDP; */
-                /* free(type[i]); */
-                /* i++; */
-        /* } */
         free(type);
         return EXIT_SUCCESS;
 }
@@ -168,11 +151,7 @@ int8_t parse_arg(int argc, char **argv)
                 } else if (!ft_strcmp("--scan", argv[i])) {
                         ++i;
                         if (get_scan_type(argv[i]))
-                                /* error++; */
                                 return EXIT_FAILURE;
-                        /* --i; */
-                /* else if (ft_strcmp("--os", argv[i])) */
-                /*         ;// call Function */
                 } else {
                         help_menu(EXIT_FAILURE);
                 }

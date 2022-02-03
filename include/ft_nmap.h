@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:06:51 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 16:09:40 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,7 +202,6 @@ char *get_service(uint16_t port, const char *proto);
 void help_menu(int8_t status);
 void check_options(void);
 void ip_dot(char *ip);
-/* void break_signal(int sig, pthread_t pid, int ok); */
 void break_signal(int sig, siginfo_t *info, void *pid);
 void interrupt_signal(int sig);
 void calculate_scan_time(struct timeval start, struct timeval end);

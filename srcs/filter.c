@@ -6,7 +6,7 @@
 /*   By: zizou </var/mail/zizou>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/18 01:02:51 by zizou             #+#    #+#             */
-/*   Updated: 2022/02/02 17:22:08 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 16:18:05 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,6 @@ int8_t compile_and_set_filter(t_target *tgt, pcap_t **handle, bpf_u_int32 mask, 
         char s[ERRBUF];
         struct bpf_program fp;
 
-        /* pthread_mutex_lock(e.mutex); */
         if ((filter = create_filter(tgt, port, type)) == NULL)
                 goto return_failure;
         if ((pcap_compile(*handle, &fp, filter, 0, mask)) == -1)
@@ -70,12 +69,10 @@ return_failure:
         fprintf(stderr, "%s", s);
         pcap_freecode(&fp);
         free(filter);
-        /* pthread_mutex_unlock(e.mutex); */
         return EXIT_FAILURE;
 
 return_success:
         pcap_freecode(&fp);
         free(filter);
-        /* pthread_mutex_unlock(e.mutex); */
         return EXIT_SUCCESS;
 }

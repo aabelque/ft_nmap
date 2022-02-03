@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/13 14:25:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/27 13:53:40 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 16:29:35 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,15 +164,19 @@ void udp_decode(t_pkt_data *data, uint8_t code, uint8_t flags, bool exist)
         uint8_t state = 0;
         uint16_t port = data->port;
 
-        if (code != 255) {
+        switch (code) {
+        case 255:
+                if (flags == 0)
+                        state |= S_OF;
+                else
+                        state |= S_OP;
+                break;
+        default:
                 if (code == 3)
                         state |= S_CL;
                 else
                         state |= S_FI;
-        } else if (flags == 0 && code == 255) {
-                state |= S_OF;
-        } else {
-                state |= S_OP;
+                break;
         }
         if (exist)
                 update_node(data->tgt->report, UDP, state, port);

@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 14:00:12 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 16:22:52 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,12 @@
 char *get_ip_from_file(char *file)
 {
         int fd;
-        char buff[1024];
+        char buff[4096];
 
-        ft_memset(buff, 0, 1024);
+        ft_memset(buff, 0, sizeof(buff));
         if ((fd = open(file, O_RDONLY)) == -1)
                 return NULL;
-        if (read(fd, buff, 1024) < 0)
+        if (read(fd, buff, 4096) < 0)
                 return NULL;
         close(fd);
         return ft_strdup(buff);

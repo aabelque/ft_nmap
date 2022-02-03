@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 19:26:13 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/02 18:11:08 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 16:17:02 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ static int16_t send_tcp_packet(t_target *tgt, uint16_t port, int8_t hlen, uint8_
  */
 static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
 {
-        int8_t cc = 0;
+        int8_t opt = 1, cc = 0;
         struct udp_packet packet;
         struct sockaddr_in addr;
 
@@ -62,6 +62,8 @@ static int16_t send_udp_packet(t_target *tgt, uint16_t port, int8_t hlen)
 	addr.sin_port = htons(port);
         udp_packet_setup(&packet, tgt, port, hlen);
         if ((tgt->socket = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+                return EXIT_FAILURE;
+        if (setsockopt(tgt->socket, IPPROTO_IP, IP_HDRINCL, &opt, sizeof(opt)))
                 return EXIT_FAILURE;
         return sendto(tgt->socket, &packet, hlen, \
                         0, (struct sockaddr *)&addr, sizeof(addr));
