@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/02 14:15:30 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 15:41:08 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,5 +123,5 @@ void break_signal(__attribute__((unused))int sig, siginfo_t *info, void *pid)
  */
 inline void interrupt_signal(__attribute__((unused))int sig)
 {
-        /*! TODO: cleanup env to exit properly */
+        e.quit = true;
 }

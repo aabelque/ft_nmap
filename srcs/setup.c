@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/02 18:09:02 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 16:08:48 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,9 @@ void target_setup(void)
  */
 void environment_setup(void)
 {
-        /* pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER; */
-        /* e.mutex = &m; */
-        pthread_mutex_init(&e.mutex, NULL);
         e.resolve_dns = true;
         e.many_target = false;
+        e.quit = false;
         e.pid = (getpid() & 0xffff);
         e.seq = 0;
         e.dot = 0;
@@ -41,12 +39,9 @@ void environment_setup(void)
         e.dim = 0;
         e.newargc = 0;
         e.nb_thread = 0;
-        e.udp_socket = 0;
-        e.tcp_socket = 0;
         e.time = 0.0;
         e.hostname = NULL;
         e.multiple_ip = NULL;
-        ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
         ft_memset(e.my_ip, 0, ft_strlen(e.my_ip));
@@ -68,8 +63,6 @@ void free_environment(void)
                                         free(e.target[i].rdns);
                                 if (e.target[i].to)
                                         free(e.target[i].to);
-                                /* if (e.target[i].src) */
-                                /*         free(e.target[i].src); */
                         }
                         free(e.target);
                 } else {
@@ -79,8 +72,6 @@ void free_environment(void)
                                 free(e.target->rdns);
                         if (e.target->to)
                                 free(e.target->to);
-                        /* if (e.target->src) */
-                        /*         free(e.target->src); */
                         free(e.target);
                 }
         }
@@ -107,11 +98,8 @@ void environment_cleanup(void)
         e.scan = 0;
         e.newargc = 0;
         e.nb_thread = 0;
-        e.udp_socket = 0;
-        e.tcp_socket = 0;
         e.time = 0.0;
         e.hostname = NULL;
-        ft_memset(&e.sigint, 0, sizeof(e.sigint));
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, '\0', ft_strlen(e.ip));
         ft_memset(e.my_ip, '\0', ft_strlen(e.my_ip));
@@ -144,7 +132,6 @@ int8_t get_interface_name(t_target *tgt, struct ifaddrs *ifa, char **device)
 {
         struct sockaddr_in *sa;
 
-        /* pthread_mutex_lock(e.mutex); */
         if ((*device = ft_memalloc(ft_strlen(ifa->ifa_name) + 1)) == NULL)
                 return EXIT_FAILURE;
         ft_strcpy(*device, ifa->ifa_name);
@@ -153,7 +140,18 @@ int8_t get_interface_name(t_target *tgt, struct ifaddrs *ifa, char **device)
                 return EXIT_FAILURE;
         ft_memcpy(tgt->src, sa, sizeof(*sa));
         ft_strcpy(tgt->my_ip, inet_ntoa(tgt->src->sin_addr));
-        /* pthread_mutex_unlock(e.mutex); */
+        return EXIT_SUCCESS;
+}
+
+int8_t fds_setup(struct pollfd *fds, pcap_t **handle, int8_t *fd)
+{
+        char errbuf[ERRBUF];
+
+        if (pcap_setnonblock(*handle, 1, errbuf) == -1)
+                return EXIT_FAILURE;
+        if ((*fd = pcap_get_selectable_fd(*handle)) == -1)
+                return EXIT_FAILURE;
+        *fds = (struct pollfd){ *fd, POLLIN, 0 };
         return EXIT_SUCCESS;
 }
 
@@ -172,36 +170,25 @@ int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type
         char error[ERRBUF], s[ERRBUF];
         bpf_u_int32 ip, mask;
 
-        /* printf("in capture_setup()\n"); */
         ft_memset(error, '\0', sizeof(error));
         ft_memset(s, '\0', sizeof(s));
 
-        /* pthread_mutex_lock(&e.mutex); */
-        /* printf("before get_device_ip_and_mask()\n"); */
         if (get_device_ip_and_mask(tgt, &device, &ip, &mask))
                 goto return_failure;
-        /* printf("after get_device_ip_and_mask()\n"); */
-        /* printf("before pcap_open_live()\n"); */
         if ((*handle = pcap_open_live(device, BUFSIZ, 0, 0, error)) == NULL)
                 goto pcap_open_failure;
-        /* printf("after pcap_open_live()\n"); */
-        /* printf("before compile_and_set_filter()\n"); */
         if (compile_and_set_filter(tgt, handle, ip, port, type))
                 goto return_failure;
-        /* printf("after compile_and_set_filter()\n"); */
-        /* pthread_mutex_unlock(&e.mutex); */
         free(device);
         return EXIT_SUCCESS;
 
 return_failure:
         free(device);
-        /* pthread_mutex_unlock(&e.mutex); */
         return EXIT_FAILURE;
 pcap_open_failure:
         sprintf(s, "Could not open %s - %s\n", device, error);
         fprintf(stderr, "%s", s);
         free(device);
-        /* pthread_mutex_unlock(&e.mutex); */
         return EXIT_FAILURE;
 }
 
@@ -214,6 +201,7 @@ uint16_t checksum_tcp(struct tcphdr *p, struct in_addr dst, struct in_addr src)
         hdr.zero = 0;
         hdr.proto = IPPROTO_TCP;
         hdr.len = htons(sizeof(struct tcphdr));
+
         ft_memcpy(&hdr.tcp, p, sizeof(struct tcphdr));
         return checksum(&hdr, sizeof(t_psdohdr));
 }
@@ -230,7 +218,6 @@ void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
                 uint16_t port, int8_t hlen, uint8_t type)
 {
 
-        /* pthread_mutex_lock(e.mutex); */
         ft_memset(pkt, 0, sizeof(*pkt));
 	(pkt->ip).ip_off = 0;
 	(pkt->ip).ip_hl = sizeof(pkt->ip) >> 2;
@@ -259,7 +246,6 @@ void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
         (pkt->tcp).window = htons(UINT16_MAX);
         (pkt->tcp).urg_ptr = 0;
         (pkt->tcp).th_sum = 0;
-        /* pthread_mutex_unlock(e.mutex); */
 }
 
 /**
@@ -294,16 +280,11 @@ void udp_packet_setup(struct udp_packet *pkt, t_target *tgt, \
 void signal_setup(void)
 {
         int8_t cc;
-        struct sigaction sig_alarm;
+        struct sigaction sig_interupt;
 
-        ft_memset(&sig_alarm, 0, sizeof(sig_alarm));
-        sigemptyset(&sig_alarm.sa_mask);
-        sig_alarm.sa_flags = SA_SIGINFO;
-        sig_alarm.sa_sigaction = &break_signal;
-        cc = ft_strcmp(e.target->ip, "127.0.0.1") ? 1 : 3;
-        alarm(cc);
-        sigaction(SIGALRM, &sig_alarm, NULL);
-
-        e.sigint.sa_handler = &interrupt_signal;
-        e.sigint.sa_flags = 0;
+        ft_memset(&sig_interupt, 0, sizeof(sig_interupt));
+        sigemptyset(&sig_interupt.sa_mask);
+        sig_interupt.sa_flags = SA_RESETHAND;
+        sig_interupt.sa_handler = &interrupt_signal;
+        sigaction(SIGINT, &sig_interupt, NULL);
 }

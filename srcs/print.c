@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/29 17:42:46 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 16:06:51 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,12 +84,11 @@ static char *fill_dash(int8_t from, int8_t to)
 void print_result(t_result *r)
 {
         char *dash;
-        t_result *tmp = r;
 
         dash = fill_dash(0, '-');
         fprintf(stdout,"Scan result:\n");
         fprintf(stdout, "%s%8s%10s\n%s\n", "PORT", "SERVICE", "STATE", dash);
-        get_each_port(tmp);
+        get_each_port(r);
         free(dash);
 }
 

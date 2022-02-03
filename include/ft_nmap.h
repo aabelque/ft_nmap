@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/02 18:08:03 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 16:06:51 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,12 +144,11 @@ typedef struct  s_pkt_data {
 typedef struct  s_env {
         bool                    resolve_dns;
         bool                    many_target;
+        bool                    quit;
         int8_t                  dot;
         int8_t                  newargc;
         uint8_t                 scan;
         uint8_t                 nb_thread;
-        int16_t                 udp_socket;
-        int16_t                 tcp_socket;
         uint16_t                dim;
         uint16_t                pid;
         uint16_t                seq;
@@ -162,8 +161,6 @@ typedef struct  s_env {
         char                    my_mask[INET_ADDRSTRLEN];
         char                    **multiple_ip;
         struct timeval          tv;
-        struct sigaction        sigint;
-        pcap_t                  **handle;
         pthread_mutex_t         mutex;
 	pthread_t               *thr_id;
         t_target                *target;
@@ -234,6 +231,7 @@ void udp_packet_setup(struct udp_packet *pkt, t_target *tgt, \
 void tcp_packet_setup(struct tcp_packet *pkt, t_target *tgt, \
                 uint16_t port, int8_t hlen, uint8_t type);
 int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type);
+int8_t fds_setup(struct pollfd *fds, pcap_t **handle, int8_t *fd);
 uint16_t number_of_ports(void);
 uint16_t checksum_tcp(struct tcphdr *p, struct in_addr dst, struct in_addr src);
 

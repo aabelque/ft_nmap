@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/27 13:45:43 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 14:00:12 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,8 @@ int8_t get_nbip_and_alloc(char *ip)
 int8_t copy_ips(char *ip)
 {
         for (uint16_t i = 0, j = 0, k = 0; ip[i] != '\0'; i++, k++) {
+                if (k > 16)
+                        return EXIT_FAILURE;
                 if (ip[i] == '\n') {
                         j++; k = -1;
                 } else {

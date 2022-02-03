@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/27 16:38:11 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 14:01:41 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,6 @@ static int8_t get_file(char *file)
         char *ip;
 
         if ((ip = get_ip_from_file(file)) == NULL)
-                return EXIT_FAILURE;
-        if (ft_strlen(ip) > 16)
                 return EXIT_FAILURE;
         if (get_nbip_and_alloc(ip))
                 return EXIT_FAILURE;
