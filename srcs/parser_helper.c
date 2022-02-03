@@ -6,12 +6,17 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:22:52 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 18:14:53 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
+/**
+ * get_ip_from_file - open and read file to get ip
+ * @file: file that contains ip
+ * @return NULL on failure or string that contains ips
+ */
 char *get_ip_from_file(char *file)
 {
         int fd;
@@ -26,6 +31,11 @@ char *get_ip_from_file(char *file)
         return ft_strdup(buff);
 }
 
+/**
+ * get_nbip_and_alloc - get number of ip and alloc 2D array of ips
+ * @ip: string that contains all ips
+ * @return 0 on success or 1 on failure
+ */
 int8_t get_nbip_and_alloc(char *ip)
 {
         uint16_t i = 0;
@@ -45,6 +55,11 @@ int8_t get_nbip_and_alloc(char *ip)
         return EXIT_SUCCESS;
 }
 
+/**
+ * copy_ips - copy ips into 2D array of ips
+ * @ip: ip to copy
+ * @return 0 on success or 1 on failure
+ */
 int8_t copy_ips(char *ip)
 {
         for (uint16_t i = 0, j = 0, k = 0; ip[i] != '\0'; i++, k++) {

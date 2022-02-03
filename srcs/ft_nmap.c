@@ -6,22 +6,19 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:44:49 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:06:50 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 19:24:43 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
 /*! TODO: handle SIGINT signal with sigaction() */
-/*! TODO: description function parser_helper.c and error.c */
 
 extern t_env e;
 
 /**
- * nmap_scan -  Check if there is many target
- *              and call process_scan() many time or one time
- *
- * @target      struct t_target that contain target(s)
+ * nmap_scan -  Call process_scan()
+ * @data      data send by pthread_create()
  *
  */
 void *nmap_scan(void *data)
@@ -34,7 +31,7 @@ void *nmap_scan(void *data)
 }
 
 /**
- * ft_nmap - Lunch nmap scan and print result
+ * ft_nmap - Check if there is many target and Lunch create_thread to scan
  */
 void ft_nmap(void)
 {

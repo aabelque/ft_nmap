@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:01:36 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 19:10:21 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,6 +97,8 @@ static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
         cnt = ft_strcmp(tgt->ip, "127.0.0.1") ? 1 : 2;
         gettimeofday(&t1, NULL);
         do {
+                if (e.quit)
+                        goto quit;
                 if (poll(&fds, 1, wait)) {
                         if (fds.revents != 0 && fds.revents & POLLIN) {
                                 if (fds.fd == fd) {

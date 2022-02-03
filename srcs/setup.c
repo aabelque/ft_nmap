@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:08:48 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 19:26:56 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -280,11 +280,17 @@ void udp_packet_setup(struct udp_packet *pkt, t_target *tgt, \
 void signal_setup(void)
 {
         int8_t cc;
-        struct sigaction sig_interupt;
+        struct sigaction sig_interupt, sig_quit;
 
         ft_memset(&sig_interupt, 0, sizeof(sig_interupt));
         sigemptyset(&sig_interupt.sa_mask);
         sig_interupt.sa_flags = SA_RESETHAND;
         sig_interupt.sa_handler = &interrupt_signal;
         sigaction(SIGINT, &sig_interupt, NULL);
+
+        /* ft_memset(&sig_quit, 0, sizeof(sig_quit)); */
+        /* sigemptyset(&sig_quit.sa_mask); */
+        /* sig_quit.sa_flags = 0; */
+        /* sig_quit.sa_handler = &quit_signal; */
+        /* sigaction(SIGQUIT, &sig_quit, NULL); */
 }

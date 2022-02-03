@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/14 15:16:02 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/02 18:47:00 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/03 18:10:15 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,44 +24,56 @@ static t_scan *new_scan(uint8_t state, uint8_t type)
         return new;
 }
 
+/**
+ * add_scan - create new node of scan and add it to scan list
+ * @scan: linked list that contains scan node
+ * @type: type of scan
+ * @state: port state
+ */
 void add_scan(t_scan *scan, uint8_t type, uint8_t state)
 {
         t_scan **tmp = &scan;
 
         while ((*tmp)->next)
                 *tmp = (*tmp)->next;
-        /* pthread_mutex_lock(&e.mutex); */
         (*tmp)->next = new_scan(state, type);
-        /* pthread_mutex_unlock(&e.mutex); */
 }
 
+/**
+ * update_node - update port node with new scan
+ * @list: linked list that contains port node
+ * @type: type of scan
+ * @state: port state
+ * @port: port to update
+ */
 void update_node(t_result *list, uint8_t type, uint8_t state, uint16_t port)
 {
         t_result **tmp = &list;
 
         while (*tmp) {
-                /* pthread_mutex_lock(&e.mutex); */
                 if (port == (*tmp)->port) {
                         add_scan((*tmp)->scan, type, state);
                         break;
                 }
                 *tmp = (*tmp)->next;
-                /* pthread_mutex_unlock(&e.mutex); */
         }
 }
 
+/**
+ * is_node_exist - find if port node exist
+ * @list: linked list to loop over
+ * @port: port to find
+ * @return true if port is find or false
+ */
 bool is_node_exist(t_result *list, uint16_t port)
 {
         t_result **tmp = &list;
 
         while (*tmp) {
-                /* pthread_mutex_lock(&e.mutex); */
                 if (port == (*tmp)->port) {
-                        /* pthread_mutex_unlock(&e.mutex); */
                         return true;
                 }
                 *tmp = (*tmp)->next;
-                /* pthread_mutex_unlock(&e.mutex); */
         }
         return false;
 }
@@ -76,9 +88,7 @@ t_result *find_lastnode(t_result *list)
         t_result **tmp = &list;
 
         while ((*tmp)->next) {
-                /* pthread_mutex_lock(&e.mutex); */
                 *tmp = (*tmp)->next;
-                /* pthread_mutex_unlock(&e.mutex); */
         }
         return *tmp;
 }

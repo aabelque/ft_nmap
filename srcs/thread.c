@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/27 14:14:24 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 15:56:46 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 19:23:03 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,10 +87,16 @@ static int8_t dispatch_thread(t_ports_per_thread p, t_result **r)
                         goto return_failure;
                 if (p.remaining_ports)
                         p.remaining_ports--;
+                /* printf("Before create sleep()\n"); */
+                /* sleep(1); */
+                /* printf("After create sleep()\n"); */
         }
         for (thread = 0; thread < e.nb_thread; thread++) {
                 if (join_thread(e.thr_id[thread], r))
                         goto return_failure;
+                /* printf("Before join sleep()\n"); */
+                /* sleep(1); */
+                /* printf("After join sleep()\n"); */
         }
         free(e.thr_id);
         return EXIT_SUCCESS;

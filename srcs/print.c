@@ -6,18 +6,23 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:56:15 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 17:57:51 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_nmap.h"
 
-static void print_state(uint8_t state, int8_t *type, bool *first, int8_t len)
+/**
+ * print_each_state - print scan type and port state
+ * @state: port state
+ * @type: scan type
+ * @first: boolean to know if it's the first port to print
+ */
+static void print_each_state(uint8_t state, int8_t *type, bool *first)
 {
         int8_t space;
 
         space = ft_strlen((char *)type) == 4 ? 1 : 2;
-        space = len < 12 ? space : space - len;
         *first = *first == true ? false : printf("%17s", "");
         if (state & S_OP)
                 fprintf(stdout, "%s%*s- %s\n", type, space, "", "Open");
@@ -33,7 +38,12 @@ static void print_state(uint8_t state, int8_t *type, bool *first, int8_t len)
                 fprintf(stdout, "%s%*s- %s\n", type, space, "", "Closed|Filtered");
 }
 
-static void print_each_state(t_scan *scan, bool *first, int8_t len)
+/**
+ * get_each_state - loop over scan list to find each scan type to print
+ * @scan: list of scan
+ * @first: boolean to know if it's the first port to print
+ */
+static void get_each_state(t_scan *scan, bool *first)
 {
         uint8_t current_type = 0, i = 0, start = 1, end = 64;
         int8_t type[6][5] = {"syn\0", "null\0",
@@ -41,23 +51,30 @@ static void print_each_state(t_scan *scan, bool *first, int8_t len)
 
         for_eachtype(i, current_type, start, end) {
                 if (scan->type & current_type) {
-                        print_state(scan->state, type[i], first, len);
+                        print_each_state(scan->state, type[i], first);
                 }
         }
 }
 
+/**
+ * print_each_port - print number port and service and loop over scan list
+ * @r: list of result
+ * @first: boolean to know if it's the first port to print
+ */
 static void print_each_port(t_result *r, bool *first)
 {
-        int8_t len = ft_strlen(r->service);
-
         fprintf(stdout, "%*d", -5, r->port);
-        fprintf(stdout, "%*s", len > 12 ? len - 12: -12, r->service ? r->service : "Unassigned");
+        fprintf(stdout, "%*s", -12, r->service ? r->service : "Unassigned");
         for (t_scan *s = r->scan; s; s = s->next) {
-                print_each_state(s, first, len);
+                get_each_state(s, first);
                 *first = false;
         }
 }
 
+/**
+ * get_each_port - loop over result list to find each port node
+ * @r: list of result
+ */
 static void get_each_port(t_result *r)
 {
         bool first = true;
@@ -70,20 +87,30 @@ static void get_each_port(t_result *r)
         }
 }
 
-static char *fill_dash(int8_t from, int8_t to)
+/**
+ * fill_dash - set string with appropriate number of dash '-'
+ * @start: where to start to write
+ * @dash: character dash
+ * @return string of dash
+ */
+static char *fill_dash(int8_t start, int8_t dash)
 {
         uint8_t size = 29;
-        char *dash, *tmp;
+        char *dash_string, *tmp;
         
-        dash = ft_memalloc(sizeof(char) * (size + 1));
-        ft_memset(dash, '\0', ft_strlen(dash));
-        tmp = dash;
-        for (int i = 0; i < size; i++) {
-                tmp[i] = to;
+        dash_string = ft_memalloc(sizeof(char) * (size + 1));
+        ft_memset(dash_string, '\0', ft_strlen(dash_string));
+        tmp = dash_string;
+        for (int i = start; i < size; i++) {
+                tmp[i] = dash;
         }
-        return dash;
+        return dash_string;
 }
 
+/**
+ * print_result - print scan result
+ * @r: list of result
+ */
 void print_result(t_result *r)
 {
         char *dash;

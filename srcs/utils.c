@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:10:12 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 19:29:10 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,11 @@ int8_t get_device_ip_and_mask(t_target *tgt, char **device, bpf_u_int32 *ip, bpf
 return_failure:
         fprintf(stderr, "%s", error);
         return EXIT_FAILURE;
+}
+
+inline void quit_signal(__attribute__((unused))int sig)
+{
+        e.quit = true;
 }
 
 /**
