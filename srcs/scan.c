@@ -128,7 +128,7 @@ quit:
 }
 
 /**
- * process_scan - for each port lunch scan with the appropriate type of scan
+ * process_scan - for each port launch scan with the appropriate type of scan
  * @target: struct t_target that contain target(s) info
  * @return 0 for success or 1 for failure
  */

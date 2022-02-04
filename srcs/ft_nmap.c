@@ -21,9 +21,26 @@ extern t_env e;
  * @data      data send by pthread_create()
  *
  */
+
+void test(int _)
+{
+	printf("here I am ! %ld, %d\n", pthread_self(), _);
+	pthread_exit(NULL);
+	printf("here I am ! %ld, %d\n", pthread_self(), _);
+}
+
 void *nmap_scan(void *data)
 {
+		struct sigaction siga;
+		memset(&siga, 0, sizeof(siga));
+		printf("toto %ld\n", pthread_self());
+		siga.sa_handler = &test;
+
+
         t_target *tgt = (t_target *)data;
+		//e.target = tgt;
+
+		sigaction(33, &siga, NULL);
 
         if (process_scan(tgt, tgt->ports))
                 pthread_exit(NULL);

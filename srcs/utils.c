@@ -107,5 +107,10 @@ inline void quit_signal(__attribute__((unused))int sig)
  */
 inline void interrupt_signal(__attribute__((unused))int sig)
 {
-        e.quit = true;
+        //e.quit = true;
+		for (uint8_t i = 0; i < e.nb_thread; i++)
+			pthread_kill(e.thr_id[i], 33);
+
+		environment_cleanup();
+		exit(EXIT_SUCCESS);
 }
