@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 19:10:21 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/03 19:32:31 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ quit:
 
 /**
  * process_scan - for each port lunch scan with the appropriate type of scan
- * @target: struct t_target that contain target(s) info
+ * @targ, leaks when ctrl-, leaks when ctrl-CCet: struct t_target that contain target(s) info
  * @return 0 for success or 1 for failure
  */
 int8_t process_scan(t_target *target, uint16_t *ports)
