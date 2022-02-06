@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 11:45:34 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 19:04:26 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/06 22:37:49 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,7 @@ typedef struct  s_target {
         char                    my_ip[INET_ADDRSTRLEN];
         struct sockaddr_in      *to;
         struct sockaddr_in      *src;
+        pcap_t 	                *handle;
         t_result                *report;
 }               t_target;
 
@@ -162,6 +163,7 @@ typedef struct  s_env {
         char                    **multiple_ip;
         struct timeval          tv;
         pthread_mutex_t         mutex;
+	pcap_t 			*handle;
 	pthread_t               *thr_id;
         t_target                *target;
 }               t_env;
@@ -203,6 +205,7 @@ void help_menu(int8_t status);
 void check_options(void);
 void ip_dot(char *ip);
 void quit_signal(int sig);
+void clean_thread(t_target *tgt);
 void interrupt_signal(int sig);
 void calculate_scan_time(struct timeval start, struct timeval end);
 int8_t is_loopback(char *ip, struct ifaddrs *ifa);

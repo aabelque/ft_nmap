@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 20:43:24 by aabelque          #+#    #+#             */
-/*   Updated: 2022/01/18 01:19:23 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/06 22:42:00 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ void exit_errors(int error, char *arg)
  */
 void perror_and_exit(char *s)
 {
-        fprintf(stderr, "%s\n""QUITTING\n", s);
+        fprintf(stderr, "%s""QUITTING!\n", s);
         environment_cleanup();
         exit(EXIT_FAILURE);
 }

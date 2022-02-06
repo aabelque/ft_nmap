@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 19:32:31 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/06 22:38:18 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,48 +83,41 @@ static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
         struct timeval t1, t2;
         struct pollfd fds;
         t_pkt_data data;
-        pcap_t *handle;
         
-        if (e.quit)
-                goto quit;
         data = (t_pkt_data){type, port, tgt};
-        if (capture_setup(&handle, tgt, port, type))
+        if (capture_setup(&tgt->handle, tgt, port, type))
                 goto return_failure;
         if (send_packet(tgt, port, type))
                 goto return_failure;
-        if (fds_setup(&fds, &handle, &fd))
+        if (fds_setup(&fds, &tgt->handle, &fd))
                 goto return_failure;
         cnt = ft_strcmp(tgt->ip, "127.0.0.1") ? 1 : 2;
         gettimeofday(&t1, NULL);
         do {
-                if (e.quit)
-                        goto quit;
                 if (poll(&fds, 1, wait)) {
                         if (fds.revents != 0 && fds.revents & POLLIN) {
                                 if (fds.fd == fd) {
-                                        cc = pcap_dispatch(handle, cnt, callback, (u_char *)&data);
+                                        cc = pcap_dispatch(tgt->handle, cnt, callback, (u_char *)&data);
                                 }
                         }
                 }
                 gettimeofday(&t2, NULL);
                 time += gettimeval(t1, t2);
         } while (time < wait && cc == 0);
+        if (e.quit)
+                clean_thread(tgt);
         if (cc == -1)
                 goto return_failure;
         if (cc == 0 || cc == -2)
                 no_packet(&data);
         free(tgt->src);
-        pcap_close(handle);
+        pcap_close(tgt->handle);
         return EXIT_SUCCESS;
 
 return_failure:
         free(tgt->src);
-        pcap_close(handle);
+        pcap_close(tgt->handle);
         return EXIT_FAILURE;
-quit:
-        free_list(tgt->report);
-        fprintf(stderr, "\n%s\n", "ft_nmap quit with ctrl-C");
-        pthread_exit(NULL);
 }
 
 /**

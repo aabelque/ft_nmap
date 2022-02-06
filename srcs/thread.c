@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/27 14:14:24 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 19:23:03 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/06 22:26:03 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,14 +34,17 @@ static void copy_result(t_result **final, t_result *tmp)
         }
 }
 
-static int8_t join_thread(pthread_t id, t_result **r)
+static int8_t join_thread(pthread_t id, t_result **r, t_target t)
 {
         t_result *tmp = NULL;
 
         if (pthread_join(id, (void**)&tmp))
                 return EXIT_FAILURE;
-        if (tmp == NULL)
-                return EXIT_FAILURE;
+        if (tmp == NULL) {
+		if (e.target->src)
+			free(e.target->src);
+		free_list(e.target->report);
+	}
         copy_result(r, tmp);
         free_list(tmp);
         return EXIT_SUCCESS;
@@ -87,16 +90,10 @@ static int8_t dispatch_thread(t_ports_per_thread p, t_result **r)
                         goto return_failure;
                 if (p.remaining_ports)
                         p.remaining_ports--;
-                /* printf("Before create sleep()\n"); */
-                /* sleep(1); */
-                /* printf("After create sleep()\n"); */
         }
         for (thread = 0; thread < e.nb_thread; thread++) {
-                if (join_thread(e.thr_id[thread], r))
+                if (join_thread(e.thr_id[thread], r, t[thread]))
                         goto return_failure;
-                /* printf("Before join sleep()\n"); */
-                /* sleep(1); */
-                /* printf("After join sleep()\n"); */
         }
         free(e.thr_id);
         return EXIT_SUCCESS;

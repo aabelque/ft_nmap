@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 22:26:12 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 19:26:56 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/06 22:40:56 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,8 @@ void environment_cleanup(void)
         ft_memset(e.my_ip, '\0', ft_strlen(e.my_ip));
         ft_memset(e.my_mask, '\0', ft_strlen(e.my_mask));
         ft_memset(e.ports, 0, sizeof(e.ports));
-        free_list(e.target->report);
+        if (e.target)
+                free_list(e.target->report);
         free_environment();
 }
 
@@ -288,9 +289,9 @@ void signal_setup(void)
         sig_interupt.sa_handler = &interrupt_signal;
         sigaction(SIGINT, &sig_interupt, NULL);
 
-        /* ft_memset(&sig_quit, 0, sizeof(sig_quit)); */
-        /* sigemptyset(&sig_quit.sa_mask); */
-        /* sig_quit.sa_flags = 0; */
-        /* sig_quit.sa_handler = &quit_signal; */
-        /* sigaction(SIGQUIT, &sig_quit, NULL); */
+        ft_memset(&sig_quit, 0, sizeof(sig_quit));
+        sigemptyset(&sig_quit.sa_mask);
+        sig_quit.sa_flags = 0;
+        sig_quit.sa_handler = &quit_signal;
+        sigaction(SIGQUIT, &sig_quit, NULL);
 }

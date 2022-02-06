@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/26 18:56:54 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 19:29:10 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/06 22:26:18 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,7 @@ return_failure:
 
 inline void quit_signal(__attribute__((unused))int sig)
 {
+	fprintf(stderr, "\nClean up ft_nmap and quit\n");
         e.quit = true;
 }
 
@@ -107,5 +108,17 @@ inline void quit_signal(__attribute__((unused))int sig)
  */
 inline void interrupt_signal(__attribute__((unused))int sig)
 {
+	fprintf(stderr, "\nClean up ft_nmap and quit\n");
         e.quit = true;
+}
+
+void clean_thread(t_target *tgt)
+{
+	if (tgt->handle)
+		pcap_close(tgt->handle);
+	if (tgt->src)
+		free(tgt->src);
+	if (tgt->report)
+		free_list(tgt->report);
+	pthread_exit(NULL);
 }
