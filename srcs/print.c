@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 17:57:51 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/07 10:37:58 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,10 @@ void print_last_line(void)
  */
 void print_header(char *hname, char *ip, char *rdns)
 {
+        uint8_t i = 0, type = 0, start = 1, end = 64;
+        char array_types[6][6] = {"SYN \0", "NULL \0", "ACK \0",
+                "FIN \0", "XMAS \0", "UDP \0"};
+
         if (!hname)
                 hname = ip;
         if (e.dot && rdns)
@@ -171,18 +175,22 @@ void print_header(char *hname, char *ip, char *rdns)
                 fprintf(stdout, "SYN NULL ACK FIN XMAS UDP");
         } else {
                 /*! TODO: refactoring this with array of scan type and for loop or for_eachtype loop ?? */
-                if (e.scan & SYN)
-                        fprintf(stdout, "SYN ");
-                if (e.scan & NUL)
-                        fprintf(stdout, "NULL ");
-                if (e.scan & ACK)
-                        fprintf(stdout, "ACK ");
-                if (e.scan & FIN)
-                        fprintf(stdout, "FIN ");
-                if (e.scan & XMAS)
-                        fprintf(stdout, "XMAS ");
-                if (e.scan & UDP)
-                        fprintf(stdout, "UDP ");
+                for_eachtype(i, type, start, end) {
+                        if (e.scan & type)
+                                fprintf(stdout, "%s", array_types[i]);
+                }
+                /* if (e.scan & SYN) */
+                /*         fprintf(stdout, "SYN "); */
+                /* if (e.scan & NUL) */
+                /*         fprintf(stdout, "NULL "); */
+                /* if (e.scan & ACK) */
+                /*         fprintf(stdout, "ACK "); */
+                /* if (e.scan & FIN) */
+                /*         fprintf(stdout, "FIN "); */
+                /* if (e.scan & XMAS) */
+                /*         fprintf(stdout, "XMAS "); */
+                /* if (e.scan & UDP) */
+                /*         fprintf(stdout, "UDP "); */
         }
         fprintf(stdout, "\n\n");
 }
