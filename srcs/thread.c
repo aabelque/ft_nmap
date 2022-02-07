@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/27 14:14:24 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/06 22:26:03 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/07 10:25:19 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,24 +74,24 @@ static t_target *set_ports(t_target *tgt, t_ports_per_thread p, uint16_t *prt)
         return tgt;
 }
 
-static int8_t dispatch_thread(t_ports_per_thread p, t_result **r)
+static int8_t dispatch_thread(t_ports_per_thread p, t_result **r, uint8_t nb_thread)
 {
         uint8_t thread;
         uint16_t prt[1025];
-        t_target t[e.nb_thread];
+        t_target t[nb_thread];
 
         ft_memset(prt, 0, sizeof(e.ports));
         ft_memcpy(prt, e.ports, sizeof(e.ports));
-        if ((e.thr_id = ft_memalloc(sizeof(pthread_t) * e.nb_thread)) == NULL)
+        if ((e.thr_id = ft_memalloc(sizeof(pthread_t) * nb_thread)) == NULL)
                 return EXIT_FAILURE;
-        for (thread = 0; thread < e.nb_thread; thread++) {
+        for (thread = 0; thread < nb_thread; thread++) {
                 ft_memcpy(&t[thread], e.target, sizeof(*e.target));
                 if (send_thread(&e.thr_id[thread], set_ports(&t[thread], p, prt)))
                         goto return_failure;
                 if (p.remaining_ports)
                         p.remaining_ports--;
         }
-        for (thread = 0; thread < e.nb_thread; thread++) {
+        for (thread = 0; thread < nb_thread; thread++) {
                 if (join_thread(e.thr_id[thread], r, t[thread]))
                         goto return_failure;
         }
@@ -103,31 +103,31 @@ return_failure:
         return EXIT_FAILURE;
 }
 
-static t_ports_per_thread define_port_per_thread(void)
+static t_ports_per_thread define_port_per_thread(uint8_t *nb_thread)
 {
         uint16_t nb_ports = 0;
         t_ports_per_thread p = {0, 0};
 
         nb_ports = number_of_ports();
-        if (e.nb_thread > nb_ports) {
-                e.nb_thread = nb_ports;
+        if (*nb_thread > nb_ports) {
+                *nb_thread = nb_ports;
                 p.ports_per_thread = 1;
         } else {
-                p.ports_per_thread = nb_ports / e.nb_thread;
-                p.remaining_ports = nb_ports % e.nb_thread;
+                p.ports_per_thread = nb_ports / *nb_thread;
+                p.remaining_ports = nb_ports % *nb_thread;
         }
         return p;
 }
 
 int8_t create_thread(__attribute__((unused))void *ports)
 {
+        uint8_t nb_thread = 0;
         t_ports_per_thread p;
         t_result *r = NULL;
 
-        if (!e.nb_thread)
-                e.nb_thread = 1;
-        p = define_port_per_thread();
-        if (dispatch_thread(p, &r))
+        nb_thread = !e.nb_thread ? 1 : e.nb_thread;
+        p = define_port_per_thread(&nb_thread);
+        if (dispatch_thread(p, &r, nb_thread))
                 return EXIT_FAILURE;
         print_result(r);
         free_list(r);
