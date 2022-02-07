@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 18:14:53 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/07 10:00:22 by zizou            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ char *get_ip_from_file(char *file)
         if ((fd = open(file, O_RDONLY)) == -1)
                 return NULL;
         if (read(fd, buff, 4096) < 0)
+                return NULL;
+        if (*buff == 0)
                 return NULL;
         close(fd);
         return ft_strdup(buff);
