@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/11 19:58:24 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/02 18:03:25 by zizou            ###   ########.fr       */
+/*   Updated: 2022/02/07 10:13:05 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,24 +32,38 @@ int8_t get_tcp_response(struct tcphdr *tcp, t_pkt_data *pkt)
         t_result *r = pkt->tgt->report;
         
         /*! TODO: Refactor this to avoid multiple loop for_eachtype */
-        if (pkt->port == ntohs(tcp->th_sport)) {
-                if (tcp->ack && tcp->syn) {
-                        for_eachtype(i, type, start, end) {
+        for_eachtype(i, type, start, end) {
+                if (pkt->port == ntohs(tcp->th_sport)) {
+                        if (tcp->ack && tcp->syn) {
                                 if (type == pkt->type)
                                         func[i](pkt, 42, 0, is_node_exist(r, pkt->port));
-                        }
-                } else if (tcp->rst) {
-                        for_eachtype(i, type, start, end) {
+                        } else if (tcp->rst) {
                                 if (type == pkt->type)
                                         func[i](pkt, 21, 0, is_node_exist(r, pkt->port));
                         }
-                }
-        } else {
-                for_eachtype(i, type, start, end) {
+                } else {
                         if (type == pkt->type)
                                 func[i](pkt, 255, 0, is_node_exist(r, pkt->port));
                 }
         }
+        /* if (pkt->port == ntohs(tcp->th_sport)) { */
+        /*         if (tcp->ack && tcp->syn) { */
+        /*                 for_eachtype(i, type, start, end) { */
+        /*                         if (type == pkt->type) */
+        /*                                 func[i](pkt, 42, 0, is_node_exist(r, pkt->port)); */
+        /*                 } */
+        /*         } else if (tcp->rst) { */
+        /*                 for_eachtype(i, type, start, end) { */
+        /*                         if (type == pkt->type) */
+        /*                                 func[i](pkt, 21, 0, is_node_exist(r, pkt->port)); */
+        /*                 } */
+        /*         } */
+        /* } else { */
+        /*         for_eachtype(i, type, start, end) { */
+        /*                 if (type == pkt->type) */
+        /*                         func[i](pkt, 255, 0, is_node_exist(r, pkt->port)); */
+        /*         } */
+        /* } */
         return EXIT_SUCCESS;
 }
 
