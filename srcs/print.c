@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/21 16:17:29 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/07 10:37:58 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/10 13:12:28 by fherbine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ static void print_each_state(uint8_t state, int8_t *type, bool *first)
         int8_t space;
 
         space = ft_strlen((char *)type) == 4 ? 1 : 2;
-        *first = *first == true ? false : printf("%17s", "");
+        *first = *first == true ? false : printf("%21s", "");
         if (state & S_OP)
                 fprintf(stdout, "%s%*s- %s\n", type, space, "", "Open");
         else if (state & S_CL)
@@ -64,7 +64,7 @@ static void get_each_state(t_scan *scan, bool *first)
 static void print_each_port(t_result *r, bool *first)
 {
         fprintf(stdout, "%*d", -5, r->port);
-        fprintf(stdout, "%*s", -12, r->service ? r->service : "Unassigned");
+        fprintf(stdout, "%*s", -16, r->service ? r->service : "Unassigned");
         for (t_scan *s = r->scan; s; s = s->next) {
                 get_each_state(s, first);
                 *first = false;
@@ -95,7 +95,7 @@ static void get_each_port(t_result *r)
  */
 static char *fill_dash(int8_t start, int8_t dash)
 {
-        uint8_t size = 29;
+        uint8_t size = 34;
         char *dash_string, *tmp;
         
         dash_string = ft_memalloc(sizeof(char) * (size + 1));
@@ -117,7 +117,7 @@ void print_result(t_result *r)
 
         dash = fill_dash(0, '-');
         fprintf(stdout,"Scan result:\n");
-        fprintf(stdout, "%s%8s%10s\n%s\n", "PORT", "SERVICE", "STATE", dash);
+        fprintf(stdout, "%s%8s%14s\n%s\n", "PORT", "SERVICE", "STATE", dash);
         get_each_port(r);
         free(dash);
 }
