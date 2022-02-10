@@ -173,7 +173,7 @@ int8_t capture_setup(pcap_t **handle, t_target *tgt, uint16_t port, uint8_t type
 {
         int8_t to_ms = 25;
         char *device = NULL;
-        char error[ERRBUF], s[ERRBUF];
+        char error[ERRBUF], s[ERRBUF+128];
         bpf_u_int32 ip, mask;
 
         ft_memset(error, '\0', sizeof(error));
