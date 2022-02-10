@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/04 12:43:27 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/07 10:06:47 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/10 13:15:24 by fherbine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ static int8_t get_range(char *numbers)
         free(tmp[0]);
         free(tmp[1]);
         free(tmp);
-        if (first > last || last + first > 1024 \
+        if (first > last || last - first > 1024 \
                         || last < 0 || first < 0 \
                         || last > UINT16_MAX || first > UINT16_MAX)
                 return EXIT_FAILURE;
