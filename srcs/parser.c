@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/25 21:00:45 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/03 16:21:38 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/10 13:38:26 by fherbine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,10 +74,18 @@ static int8_t get_ports(char **argv, int8_t idx)
  */
 static int8_t get_nbthread(char *nb_thread)
 {
-        if (strisdigit(nb_thread))
-                e.nb_thread = ft_atoi(nb_thread);
-        if (e.nb_thread < 0 || e.nb_thread > 250)
+        int64_t _tmp;
+
+        if (!strisdigit(nb_thread))
                 return EXIT_FAILURE;
+
+        _tmp = ft_atoi(nb_thread);
+
+        if (_tmp < 0 || _tmp > 250)
+                return EXIT_FAILURE;
+
+        e.nb_thread = (uint8_t)_tmp;
+
         return EXIT_SUCCESS;
 }
 
@@ -147,7 +155,7 @@ int8_t parse_arg(int argc, char **argv)
                                 i = e.newargc;
                 } else if (!ft_strcmp("--speedup", argv[i])) {
                         if (get_nbthread(argv[++i]))
-                                perror_and_exit("Speedup must be between 0 and 250");
+                                perror_and_exit("Speedup must be between 0 and 250\n");
                 } else if (!ft_strcmp("--scan", argv[i])) {
                         ++i;
                         if (get_scan_type(argv[i]))
