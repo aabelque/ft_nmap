@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/07 10:05:52 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/07 10:05:58 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/10 13:45:32 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +27,8 @@ static char *create_filter(t_target *tgt, uint16_t port, uint8_t type)
                 return NULL;
         if (type == UDP)
                 sprintf(filter, \
-                        "(icmp and src host %s and dst host %s)" \
-                        " || " \
-                        "(udp and src host %s and dst host %s)", \
-                        tgt->ip, tgt->my_ip, tgt->ip, tgt->my_ip);
+                        "(icmp and src host %s and dst host %s)", \
+                        tgt->ip, tgt->my_ip);
         else
                 sprintf(filter, \
                         "(tcp and src host %s and dst host %s)" \

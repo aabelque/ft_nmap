@@ -6,7 +6,7 @@
 /*   By: aabelque <aabelque@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/05 16:05:05 by aabelque          #+#    #+#             */
-/*   Updated: 2022/02/06 22:38:18 by aabelque         ###   ########.fr       */
+/*   Updated: 2022/02/10 13:45:41 by aabelque         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ static void callback(u_char *arg, const struct pcap_pkthdr *hdr, const u_char *d
  */
 static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
 {
-        int8_t cc = 0, cnt = 0, fd = 0;
+        int8_t cc = 0, cnt = 1, fd = 0;
         int64_t wait = 500;
         int64_t time = 0.0;
         struct timeval t1, t2;
@@ -91,7 +91,6 @@ static int8_t scan(t_target *tgt, uint8_t type, uint16_t port)
                 goto return_failure;
         if (fds_setup(&fds, &tgt->handle, &fd))
                 goto return_failure;
-        cnt = ft_strcmp(tgt->ip, "127.0.0.1") ? 1 : 2;
         gettimeofday(&t1, NULL);
         do {
                 if (poll(&fds, 1, wait)) {
