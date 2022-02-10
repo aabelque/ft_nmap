@@ -13,6 +13,7 @@
 #ifndef FT_NMAP_H
 # define FT_NMAP_H
 
+#include "ihm.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +42,7 @@
 #include <pcap/pcap.h>
 #include <ifaddrs.h>
 #include <poll.h>
+#include <ctype.h>
 
 /* Utils define */
 #define GIT "https://github.com/aabelque/ft_nmap.git"
@@ -49,6 +51,11 @@
 #define ERRBUF PCAP_ERRBUF_SIZE
 #define OFFSET 14
 #define for_eachtype(i, shift, start, end) for (uint8_t i = 0, shift = start; shift < end && i < 6; i += 1, shift <<= 1)
+
+/* Interactive mode defines */
+#define INTERACTIVE_MODE 0x10
+#define INT_IP_HOST	0x01
+#define INT_FILE	0x10
 
 /* Define error type */
 #define ERR_HOSTNAME 1
@@ -166,6 +173,7 @@ typedef struct  s_env {
 	pcap_t 			*handle;
 	pthread_t               *thr_id;
         t_target                *target;
+		char					**iargv;
 }               t_env;
 
 /* global variable */
@@ -250,6 +258,14 @@ char **ft_strsplit(char const *s, char c);
 void *ft_memset(void *s, int c, size_t n);
 void *ft_memalloc(size_t size);
 void *ft_memcpy(void *dest, const void *src, size_t n);
+void ft_free_tab(char **tab);
+char **ft_add_tab_elem(char **tab, char *elem);
+int ft_tab_len(char **tab);
+char **ft_copy_tab(char **tab);
+char *ft_strnew(size_t size);
+char *ft_strjoin(char *s1, const char *s2);
+char *ft_strsub(const char *s, unsigned int start, size_t len);
+char *ft_strtrim(const char *s);
 
 /* error functions */
 void exit_errors(int error, char *arg);
@@ -266,5 +282,8 @@ t_result *new_node(uint8_t state, uint8_t type, uint16_t port, char *service);
 
 /* ft_nmap thread functions */
 int8_t create_thread(void *target);
+
+/* Nmap interactive mode */
+int interactive_nmap(void);
 
 #endif

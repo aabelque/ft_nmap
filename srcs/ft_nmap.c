@@ -61,14 +61,20 @@ void ft_nmap(void)
 
 int main(int argc, char **argv)
 {
-        if (argc < 3)
+        if (argc < 2)
                 help_menu(EXIT_FAILURE);
         if (getuid() != 0)
                 perror_and_exit("Ft_nmap requires root privileges.\n");
         environment_setup();
         signal_setup();
-        if (parse_arg(argc, argv))
+
+		uint8_t parser_return = parse_arg(argc, argv);
+		
+        if (parser_return == EXIT_FAILURE)
                 help_menu(EXIT_FAILURE);
+		else if (parser_return != EXIT_SUCCESS)
+			return parser_return;
+
         gettimeofday(&e.tv, NULL);
         if (set_and_resolve_hosts())
                 exit_errors(ERR_HOSTNAME, e.hostname);
