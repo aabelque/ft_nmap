@@ -140,7 +140,9 @@ int8_t parse_arg(int argc, char **argv)
         for (int8_t i = 1; i < argc; ++i) {
                 if (!ft_strcmp("--help", argv[i])) {
                         help_menu(EXIT_SUCCESS);
-                } else if (!ft_strcmp("--ip", argv[i])) {
+                } else if (!ft_strcmp("--interactive", argv[i]))
+					return interactive_nmap();
+				else if (!ft_strcmp("--ip", argv[i])) {
                         e.hostname = argv[++i];
                 } else if (!ft_strcmp("--hostname", argv[i])) {
                         e.hostname = argv[++i];

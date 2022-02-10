@@ -39,6 +39,8 @@ SRC += service.c
 SRC += print.c
 SRC += filter.c
 SRC += thread.c
+SRC += ihm.c
+SRC += interactive.c
 
 all: $(NAME)
 

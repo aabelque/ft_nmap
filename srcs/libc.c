@@ -235,3 +235,162 @@ char *ft_itoa(int n)
         }
         return str;
 }
+
+char		**ft_add_tab_elem(char **tab, char *elem)
+{
+	char	**new;
+	int		i;
+
+	if (!tab) {
+		if (!(tab = (char **)malloc(sizeof(char *) * (1))))
+			exit(EXIT_FAILURE);
+		tab[0] = 0;
+		return (tab);
+	}
+
+
+	if (!(new = (char **)malloc(sizeof(char *) * (ft_tab_len(tab) + 2))))
+		exit(EXIT_FAILURE);
+	i = 0;
+	while (tab[i])
+	{
+		new[i] = ft_strdup(tab[i]);
+		i++;
+	}
+	ft_free_tab(tab);
+	new[i] = ft_strdup(elem);
+	new[i + 1] = 0;
+	return (new);
+}
+
+void	ft_free_tab(char **tab)
+{
+	int	i;
+
+	i = 0;
+	while (tab[i])
+	{
+		free(tab[i]);
+		i++;
+	}
+	free(tab);
+}
+
+int		ft_tab_len(char **tab)
+{
+	int	i;
+
+	i = 0;
+	while (tab[i])
+		i++;
+	return (i);
+}
+
+char		**ft_copy_tab(char **tab)
+{
+	int		i;
+	char	**new;
+
+	if (!(new = (char **)malloc(sizeof(char *) * (ft_tab_len(tab) + 1))))
+		exit(EXIT_FAILURE);
+	i = 0;
+	while (tab[i] && tab[i] != NULL)
+	{
+		new[i] = ft_strdup(tab[i]);
+		i++;
+	}
+	new[i] = 0;
+	return (new);
+}
+
+char	*ft_strnew(size_t size)
+{
+	char *ret;
+
+	if ((ret = (char *)ft_memalloc(size + 1)) == NULL)
+		return (NULL);
+	return (ret);
+}
+
+static char	*null_str(char *to_free)
+{
+	char	*ret;
+
+	if (to_free)
+		free(to_free);
+	ret = ft_strdup("NULL");
+	return (ret);
+}
+
+char		*ft_strjoin(char *s1, const char *s2)
+{
+	char	*joined;
+	size_t	i;
+	size_t	i2;
+
+	i = 0;
+	i2 = 0;
+	if (!(s1) || !(s2))
+		return (null_str(s1));
+	if (!(joined = (char *)ft_memalloc(sizeof(char) * (ft_strlen(s1) + \
+						ft_strlen(s2) + 2))))
+		exit(EXIT_FAILURE);
+	while (s1[i])
+	{
+		joined[i] = s1[i];
+		i++;
+	}
+	while (i2 < ft_strlen(s2))
+	{
+		joined[i] = s2[i2];
+		i++;
+		i2++;
+	}
+	joined[i] = '\0';
+	free(s1);
+	return (joined);
+}
+
+char	*ft_strsub(const char *s, unsigned int start, size_t len)
+{
+	char			*cpy;
+	unsigned int	i;
+
+	i = 0;
+	if (!(s))
+		return (NULL);
+	if ((cpy = (char *)malloc(sizeof(char) * (len + 1))) == NULL)
+		return (NULL);
+	while ((size_t)i < len)
+	{
+		cpy[i] = s[start];
+		start++;
+		i++;
+	}
+	cpy[i] = '\0';
+	return (cpy);
+}
+
+
+char	*ft_strtrim(const char *s)
+{
+	unsigned int	strt;
+	size_t			len;
+	size_t			end;
+
+	strt = 0;
+	if (!s)
+		return (NULL);
+	len = ft_strlen(s);
+	end = len - 1;
+	while (s[strt] == ' ' || s[strt] == '\n' || s[strt] == '\t')
+		strt++;
+	if (strt != len)
+	{
+		while (s[end] == ' ' || s[end] == '\n' || s[end] == '\t')
+			end--;
+	}
+	else
+		return (ft_strnew(0));
+	return (ft_strsub(s, strt, end - (size_t)strt + 1));
+}  

@@ -202,13 +202,14 @@ void print_header(char *hname, char *ip, char *rdns)
 void help_menu(int8_t status)
 {
         fprintf(stdout, "Help Screen\n"
-                "Usage: ft_nmap [--ip x.x.x.x OR --file file.txt OR"
-                " --hostname example.fr] --ports RANGE/NUMBER --speedup NUMBER --scan TYPE\n"
+                "Usage: ft_nmap [[--ip x.x.x.x OR --file file.txt OR"
+                " --hostname example.fr] --ports RANGE/NUMBER --speedup NUMBER --scan TYPE OR --interactive]\n"
                 "ft_nmap [OPTIONS]\n"
                 " --help\t\tPrint this help screen\n"
                 " --ip\t\tIp adresses to scan in dot format\n"
                 " --file\t\tFile name containing IP adresses to scan\n"
                 " --hostname\thostname to scan\n"
+                " --interactive\tInteractive mode\n"
                 " --ports\tPorts to scan (eg: 1-10 or 1 2 3)\n"
                 " --speedup\t[250 max] number of parallel thread to use\n"
                 " --scan\t\tSYN,NULL,FIN,XMAS,ACK,UDP\n");

@@ -42,6 +42,7 @@ void environment_setup(void)
         e.time = 0.0;
         e.hostname = NULL;
         e.multiple_ip = NULL;
+		e.iargv = NULL;
         ft_memset(&e.tv, 0, sizeof(e.tv));
         ft_memset(e.ip, 0, ft_strlen(e.ip));
         ft_memset(e.my_ip, 0, ft_strlen(e.my_ip));
@@ -105,6 +106,10 @@ void environment_cleanup(void)
         ft_memset(e.my_ip, '\0', ft_strlen(e.my_ip));
         ft_memset(e.my_mask, '\0', ft_strlen(e.my_mask));
         ft_memset(e.ports, 0, sizeof(e.ports));
+
+		if (e.iargv)
+			ft_free_tab(e.iargv);
+
         if (e.target)
                 free_list(e.target->report);
         free_environment();
